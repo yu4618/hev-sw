@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="text/javascript" src="../static/js/gauge.min.js"></script>
+    <link rel="stylesheet" href="../static/css/style.css">
+    <title>HEV monitoring</title>
+
+          <!-- Bootstrap -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+ 
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+   
+<div class="topnav">
+  <a class="active">High Energy Ventilator</a>
+  <div class="topnav-right" Text color: black>
+  <span id="datetime"></span> &emsp; 
+  </div>
+</div>
+
+  
+
+
+
+  </body>
+
+
+<script>
+var dt = new Date();
+document.getElementById("datetime").innerHTML = (("0"+dt.getDate()).slice(-2)) +"."+ (("0"+(dt.getMonth()+1)).slice(-2)) +"."+ (dt.getFullYear()) +"  &emsp;  "   + (("0"+dt.getHours()).slice(-2)) +":"+ (("0"+dt.getMinutes()).slice(-2));
+</script>
+</html>

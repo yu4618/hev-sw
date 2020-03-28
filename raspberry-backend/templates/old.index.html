@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script type="text/javascript" src="js/gauge.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<div class="topnav">
+  <a class="active">High Energy Ventilator</a>
+  <div class="topnav-right" Text color: black>
+  <span id="datetime"></span> &emsp; 
+  </div>
+</div>
+
+<div style="padding-left:16px">
+
+<div class="container">
+  <<!-- div class="toppane">Test Page</div> -->
+  <div class="leftpane">
+    <h1>Gas parameters</h1>
+<canvas data-type="linear-gauge"
+        data-width="160"
+        data-height="600"
+        data-border-radius="0"
+        data-borders="0"
+        data-bar-begin-circle="25"
+        data-minor-ticks="10"
+        data-value="14.6"
+        data-min-value="0"
+        data-max-value="16"
+        data-title="O2"
+        data-major-ticks="0,0.5,1,2,4,8,16"
+        data-ticks-width="18"
+        data-bar-width="5"
+        data-highlights="false"
+        data-color-value-box-shadow="false"
+        data-value-box-stroke="0"
+        data-color-value-box-background="false"
+        data-value-int="2"
+        data-value-dec="1"
+></canvas>
+
+<canvas data-type="linear-gauge"
+        data-width="160"
+        data-height="600"
+        data-border-radius="0"
+        data-borders="0"
+        data-bar-begin-circle="25"
+        data-minor-ticks="10"
+        data-value="14.6"
+        data-min-value="0"
+        data-max-value="16"
+        data-title="O2"
+        data-major-ticks="0,0.5,1,2,4,8,16"
+        data-ticks-width="18"
+        data-bar-width="5"
+        data-highlights="false"
+        data-color-value-box-shadow="false"
+        data-value-box-stroke="0"
+        data-color-value-box-background="false"
+        data-value-int="2"
+        data-value-dec="1"
+></canvas>
+    <h1>Test Page</h1></div>
+  <div class="middlepane">Test Page</div>
+  <div class="rightpane">
+    <h1>Test Page</h1></div>
+</div>
+</div>
+
+</body>
+
+<script>
+var dt = new Date();
+document.getElementById("datetime").innerHTML = (("0"+dt.getDate()).slice(-2)) +"."+ (("0"+(dt.getMonth()+1)).slice(-2)) +"."+ (dt.getFullYear()) +"  &emsp;  "   + (("0"+dt.getHours()).slice(-2)) +":"+ (("0"+dt.getMinutes()).slice(-2));
+</script>
+
+
+</html>
+
