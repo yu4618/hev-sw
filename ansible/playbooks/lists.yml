@@ -1,0 +1,7 @@
+rpi-swlist:
+  - vim
+  - cowsay
+  - openssh-server
+  - minicom
+
+  

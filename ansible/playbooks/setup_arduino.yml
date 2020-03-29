@@ -1,0 +1,10 @@
+- hosts: rpi
+  vars:
+    download_dir: /home/pi/Downloads
+
+- name: include vars
+  include_vars: lists.yml
+
+- name: install arduino suite
+  command: ./arduino_suite.sh
+

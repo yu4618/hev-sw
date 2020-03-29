@@ -1,0 +1,25 @@
+- hosts: rpi
+  vars:
+    download_dir: /home/pi/Downloads
+
+- name: include vars
+  include_vars: lists.yml
+
+- name: install software via apt
+  apt: 
+    name: "{{ item }}"
+    state: installed
+  with_items: "{{ rpi-swlist }}"  
+
+- name: install arduino suite
+  command: ./arduino_suite.sh
+
+  #get_url: 
+    #url: https://www.arduino.cc/download_handler.php?f=/arduino-1.8.12-linuxarm.tar.xz
+    #dest: "{{ download_dir }}"
+
+#- name: untar arduino suite
+  #unarchive: 
+    #src: "{{ download_dir }}/arduino-1.8.12-linuxarm.tar.xz"
+    #dest: "{{ download_dir }}"
+    
