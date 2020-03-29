@@ -6,7 +6,6 @@
 #     arduino-cli board list
 # Now install whatever the correct "Core" is for the board e.g.:
 #     arduino-cli core install arduino:samd
-# And change the ardfbqn variable below to whatever the fbqn is for the board
 #
 # Author: Dónal Murray
 
@@ -14,14 +13,13 @@ import argparse
 import serial
 import subprocess
 
-# static for the moment, can be made more intelligent, getting values from arduino-cli automatically
-tmpname = '/tmp/ard_upgrade.log'
-ardfbqn = 'arduino:samd:mkr1000'
-arduino_addr = '/dev/ttyUSB0' # dummy for the minute, required argument
+# status file location
+logname = '/tmp/ard_upgrade.log'
 
-# fn to log current status. progress percentage not implemented yet (if ever)
+
 def statuslog(state='idle', progress=0, errbool=False, errmsg=''):
-    with open(str(tmpname), 'w') as tmpfile:
+    # fn to log current status. progress percentage not implemented yet (if ever)
+    with open(str(logname), 'w') as tmpfile:
         tmpfile.write(
             f'{{"firmware_update_status":"{state}", "percent":{progress}, "error":{errbool}, "error_reason": "{errmsg}"}}\n')
 
@@ -30,44 +28,66 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(
         description='Update firmware on Arduino device.\nUsage:\n    ard_upgrade path/to/fwfile /dev/ttyUSBX')
-    parser.add_argument('fwfile', help='firmware file location in arduino project folder (must have same name)')
+    parser.add_argument(
+        'fwfile', help='firmware file location in arduino project folder (must have same name)')
     parser.add_argument('arduino_addr', help='device to program')
 
     args = parser.parse_args()
 
     fwfile = args.fwfile
-    arduino_addr = args.arduino_addr
+
+    # find arduino in /dev and its FBQN
+    print(f"Checking firmware {fwfile}/{fwfile.split('/')[-1]}.ino exists")
+    try:
+        statuslog('device', 0, False, '')
+        ardlist = subprocess.check_output(
+            'arduino-cli board list'.split()).decode('utf-8')
+        arduino_addr = ardlist.split('\n')[1].split()[0]
+        ardfbqn = ardlist.split('\n')[1].split()[-1-1]
+    except (subprocess.CalledProcessError, IndexError) as e:
+        if e == IndexError:
+            # arduino-cli ran but found nothing
+            print('Could not find device')
+            statuslog('device', 0, True, 'Could not find device')
+        else:
+            # arduino-cli failed
+            print('Failed to run arduino-cli')
+            statuslog('device', 0, True, 'Failed to run arduino-cli')
+        exit(4)
+    statuslog('device', 100, False, '')
 
     # Check fwfile exists and can be opened for reading
     print(f"Checking firmware {fwfile}/{fwfile.split('/')[-1]}.ino exists")
     try:
+        statuslog('file', 0, False, '')
         f = open(f"{fwfile}/{fwfile.split('/')[-1]}.ino", 'r')
     except IOError:
         print('File cannot be opened for reading. Check the file exists.')
-        statuslog('idle',0,True,'File cannot be opened for reading. Check the file exists.')
+        statuslog('file', 0, True,
+                  'File cannot be opened for reading. Check the file exists.')
         exit(1)
-    statuslog('idle',100,False,'')
+    statuslog('file', 100, False, '')
 
     # compile
     print(f"Compiling firmware {fwfile}")
     try:
-        statuslog('compiling',0,False,'')
+        statuslog('compiling', 0, False, '')
         subprocess.run(
             f'arduino-cli compile --fqbn {ardfbqn} {fwfile}'.split())
     except subprocess.CalledProcessError:
         print('Failed to compile design')
-        statuslog('compiling',0,True,'Failed to compile design')
+        statuslog('compiling', 0, True, 'Failed to compile design')
         exit(2)
-    statuslog('compiling',100,False,'')
+    statuslog('compiling', 100, False, '')
 
     # upload to device
     print(f"Programming {arduino_addr} with firmware {fwfile}")
-    statuslog('uploading',0,False,'')
+    statuslog('uploading', 0, False, '')
     try:
         subprocess.run(
             f'arduino-cli upload -p {arduino_addr} --fqbn {ardfbqn} {fwfile}'.split())
     except subprocess.CalledProcessError:
         print('Failed to upload design to board')
-        statuslog('uploading',0,True,'Failed to upload design to board')
+        statuslog('uploading', 0, True, 'Failed to upload design to board')
         exit(3)
-    statuslog('uploading',100,False,'')
+    statuslog('uploading', 100, False, '')
