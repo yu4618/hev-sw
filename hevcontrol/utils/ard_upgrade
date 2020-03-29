@@ -39,9 +39,9 @@ if __name__ == "__main__":
     arduino_addr = args.arduino_addr
 
     # Check fwfile exists and can be opened for reading
-    print(f"Checking firmware {fwfile}/{fwfile}.ino exists")
+    print(f"Checking firmware {fwfile}/{fwfile.split('/')[-1]}.ino exists")
     try:
-        f = open(f'{fwfile}/{fwfile}.ino', 'r')
+        f = open(f"{fwfile}/{fwfile.split('/')[-1]}.ino", 'r')
     except IOError:
         print('File cannot be opened for reading. Check the file exists.')
         statuslog('idle',0,True,'File cannot be opened for reading. Check the file exists.')
