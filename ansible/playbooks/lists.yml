@@ -3,5 +3,6 @@ rpi-swlist:
   - cowsay
   - openssh-server
   - minicom
+  - python3-serial
 
   
