@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script type="text/javascript" src="../static/js/gauge.min.js"></script>
     <link rel="stylesheet" href="../static/css/style.css">
     <title>HEV monitoring</title>
 
           <!-- Bootstrap -->
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/main.css">
  
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -18,24 +18,100 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
   </head>
-  <body>
+  <body onload="startTime()">
    
-<div class="topnav">
-  <a class="active">High Energy Ventilator</a>
-  <div class="topnav-right" Text color: black>
-  <span id="datetime"></span> &emsp; 
+  <div class="topnav">
+    <a class="active">High Energy Ventilator</a>
+    <div class="topnav-right" Text color: black>
+    <span id="time"></span> &emsp; 
+    </div>
   </div>
-</div>
 
-  
+
+  </div>
+
+
+  <div class="container-fluid" style="display: inline-block" >
+    <!-- Example row of columns -->
+    <div class="row" style="width: 200%">
+        <div class="container-fluid" id="data-container-var-1" ></div>
+    </div>
+  </div>
+
+<br> </br>
+<!-- <div id="demo"></div> -->
+ 
+  <div class="container-fluid" style="display: inline-block" >
+    <!-- Example row of columns -->
+    <div class="row" style="width: 200%">
+        <div class="container-fluid" id="data-container-var-2" ></div>
+    </div>
+  </div>
+
+
+<br> </br>
+
+  <div class="container-fluid" style="display: inline-block" >
+    <!-- Example row of columns -->
+    <div class="row" style="width: 200%">
+        <div class="container-fluid" id="data-container-var-3" ></div>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+
+
+
+
 
 
 
   </body>
+<!-- external libraries -->
+    <script src="../static/js/jquery.min.js"></script>
+    <script src="../static/js/highcharts_lib.js"></script>
+    <script src="../static/js/highcharts-more.js"></script>
+    <script src="../static/js/exporting.js"></script>
+
+    <script src="../static/js/highcharts.js"></script>
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="../static/js/bootstrap.min.js"></script>
+
+
 
 
 <script>
-var dt = new Date();
-document.getElementById("datetime").innerHTML = (("0"+dt.getDate()).slice(-2)) +"."+ (("0"+(dt.getMonth()+1)).slice(-2)) +"."+ (dt.getFullYear()) +"  &emsp;  "   + (("0"+dt.getHours()).slice(-2)) +":"+ (("0"+dt.getMinutes()).slice(-2));
+function startTime() {
+  var today = new Date();
+  var h = today.getHours();
+  var m = today.getMinutes();
+  var s = today.getSeconds();
+  m = checkTime(m);
+  s = checkTime(s);
+  document.getElementById('time').innerHTML = (("0"+today.getDate()).slice(-2)) +"."+ (("0"+(today.getMonth()+1)).slice(-2)) +"."+ (today.getFullYear()) + ' &emsp; ' +
+  h + ":" + m + ":" + s;
+  var t = setTimeout(startTime, 500);
+}
+function checkTime(i) {
+  if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+  return i;
+}
 </script>
+
+<script>
+
+//var txt = '{ "fruit": "pineapple", "fingers": 10 }';
+//var obj = JSON.parse(txt);
+//console.log(obj.fruit);
+//document.getElementById("demo").innerHTML = obj.fruit;
+
+//var txt = '{{result.data}}' ;
+//var obj = JSON.stringify(txt)
+//var obj = JSON.parse(txt[]);
+//console.log(obj);
+</script>
+
+
 </html>
