@@ -4,3 +4,4 @@ python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio
 
 pio lib install VariableTimedAction
 pio run -e uno -t upload
+#pio run -t nobuild -t upload
