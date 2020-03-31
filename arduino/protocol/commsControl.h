@@ -120,11 +120,11 @@ public:
 
   void sender();
   void sendData(DataQueue<commsDATA>* queue);
-  void encoder(commsFormat* data);
+  bool encoder(uint8_t* data, uint8_t dataSize);
 
   void receiver();
   void receiveData(DataQueue<commsDATA>* queue);
-  commsFormat* decoder();
+  bool decoder(uint8_t* data, uint8_t dataSize);
   
 private:
   DataQueue<commsDATA> queueAlarm_;
@@ -135,16 +135,30 @@ private:
 
   uint64_t lastTransTime_;
 
+  uint8_t dataReceived_[CONST_MAX_SIZE_BUFFER];
+  uint8_t dataReceivedSize_;
+  uint8_t dataSend_    [CONST_MAX_SIZE_BUFFER];
+  uint8_t dataSendSize_;
+
   uint8_t lastTrans_[CONST_MAX_SIZE_BUFFER];
   uint8_t lastTransIndex_;
+
+  bool foundStart_;
 };
 
 commsControl::commsControl(uint32_t baudrate)
 {
   baudrate_ = baudrate;
+  
   lastTransTime_ = millis();
-  lastTransIndex_ = 0;
-  memset(lastTrans_, 0, sizeof(lastTrans_));
+  
+  lastTransIndex_   = 0;
+  dataReceivedSize_ = 0;
+  dataSendSize_     = 0;
+  memset(lastTrans_   , 0, sizeof(lastTrans_   ));
+  memset(dataReceived_, 0, sizeof(dataReceived_));
+  memset(dataSend_    , 0, sizeof(dataSend_    ));
+  foundStart_ = false;
   
   queueData_  = DataQueue<commsDATA>(CONST_MAX_SIZE_QUEUE);
   queueAlarm_ = DataQueue<commsDATA>(CONST_MAX_SIZE_QUEUE);
@@ -167,7 +181,19 @@ void commsControl::sender() {
 // TODO: needs switch on data type with global timeouts on data pushing
 void commsControl::receiver() {
   if (Serial.available()) {
-    decoder();
+    
+    while (Serial.peek() > 0) {
+      // read byte by byte
+      lastTransIndex_ += Serial.readBytes(lastTrans_ + lastTransIndex_, 1);
+
+
+      // TODO deal with foundStard
+      
+      if (foundStart_ && lastTransIndex_ > 0 && lastTrans_[lastTransIndex_-1] == 0x7E) {
+        decoder(lastTrans_, lastTransIndex_);
+        break;
+      }
+    }  
   }
 }
 
@@ -197,72 +223,43 @@ void commsControl::registerData(dataType type, dataFormat* values) {
 
 
 // general encoder of any transmission
-void commsControl::encoder(commsFormat* data) {
-  uint8_t packetSize = data->getSize();
-  // send start flag
-  Serial.write(data->getStart()[0]);
-
-  // encoder to split any 5 consecutive binary 1s by 0
-  // TODO: missing last byte to be transferred
-  uint8_t countOnes = 0;
-  uint8_t realVal = 0;
-  uint8_t sendVal = 0;
-  uint8_t newBit = 0;
-  uint8_t testVal = 0;
-  for (uint8_t idxByte = 1; idxByte < packetSize - 1; idxByte++) {
-    realVal = data->getData()[idxByte];
-
-    for (uint8_t idxBit = 0; idxBit < 8; idxBit ++) {
-      testVal  = (realVal >> idxBit) & 1;
-
-      // count ones
-      if (testVal == 1) {
-        countOnes++;
-        if (countOnes > 5) {
-          newBit++;
-          countOnes = 0;
-        }
-      }
-
-      // if reached 8 bits, send values
-      if (newBit >= 8) {
-        Serial.write(sendVal);
-        newBit -= 8;
-        sendVal = 0;
-      }
-
-      // add to new value
-      sendVal |= (testVal << newBit++);
+bool commsControl::encoder(uint8_t* data, uint8_t dataSize) {
+  dataSendSize_ = 0;
+  uint8_t tmpVal = 0;
+  
+  for (uint8_t idx = 0; idx < dataSize; idx++) {
+    tmpVal = data[idx];
+    if (tmpVal == 0x7D || tmpVal == 0x7E) {
+      dataSend_[dataSendSize_++] = 0x7D;
+      tmpVal ^= (1<<4);
     }
+    dataSend_[dataSendSize_++] = tmpVal;
   }
 
-  // send end flag
-  Serial.write(data->getStop()[0]);
+  return true;
 }
 
 
 // general decoder of any transmission
-// WIP
-commsFormat* commsControl::decoder() {
-  int value;
+bool commsControl::decoder(uint8_t* data, uint8_t dataSize) {
+  dataReceivedSize_ = 0;
+  uint8_t tmpVal = 0;
+  bool escaped = false;
   
-  do {
-    value = Serial.read();
-
-    // start head
-    if (value == 0x7E) {
-      lastTransIndex_ = 0;
+  for (uint8_t idx = 0; idx < dataSize; idx++) {
+    tmpVal = data[idx];
+    if (tmpVal == 0x7D) {
+      escaped = true;
+    } else {
+      if (escaped) {
+        tmpVal ^= (1<<4);
+        escaped = false;
+      }
+      dataReceived_[dataReceivedSize_++] = tmpVal;    
     }
-    lastTrans_[lastTransIndex_++] = value;
-    Serial.print(value, HEX);
-  } while (value>=0); // || value != 0x7F);
-
-  // stop head
-  if (value == 0x7F) {
-    Serial.println(lastTransIndex_, DEC);
-    Serial.write(lastTrans_, lastTransIndex_);
-    Serial.println();    
   }
+  
+  return true;
 }
 
 // sending anything of commsDATA format
@@ -271,9 +268,14 @@ void commsControl::sendData(DataQueue<commsDATA>* queue) {
   if (!queue->isEmpty()) {
     lastTransTime_ = millis();
     
-    encoder(reinterpret_cast<commsFormat*>(&queue->front()));
+    if (encoder(queue->front().getData(), queue->front().getSize()) ) {
+      if (Serial.availableForWrite() >= dataSendSize_) {
 
-    queue->dequeue();
+        Serial.write(dataSend_, dataSendSize_);    
+  
+        queue->dequeue();
+      }
+    }
   }
 }
 
