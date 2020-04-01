@@ -6,10 +6,11 @@
 # Last update: March 29, 2020
 
 from time import time
-import json
-from flask import Flask, render_template, make_response
+from flask import Flask, render_template, make_response, jsonify, Response
 import sqlite3
-import json
+#import json
+from flask import json
+import chardet
 
 WEBAPP = Flask(__name__)
 
@@ -35,9 +36,23 @@ def live_data():
         data['temperature'] = fetched[1]
         data['pressure'] = fetched[2]
 
-    response = make_response(json.dumps(data).encode('utf-8'))
+
+    #json_string = json.dumps(data, ensure_ascii = False)
+    #json_str = json.dumps(data, ensure_ascii = False, indent=4, sort_keys=True)
+    #json_utf8 = json_str.encode('utf-8')
+    #response = make_response(json_utf8)
+    #response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    #response.headers['mimetype'] = 'application/json'
+
+
+    response = make_response(json.dumps(data).encode('utf-8') )
     response.content_type = 'application/json'
+
+    
+
+    #return Response(json.dumps(data),  mimetype='application/json')
     return response
+
 
 if __name__ == '__main__':
     WEBAPP.run(debug=True, host='127.0.0.1', port=5000)

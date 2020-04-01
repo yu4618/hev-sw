@@ -21,16 +21,21 @@
   <body onload="startTime()">
    
   <div class="topnav">
-    <a class="active">High Energy Ventilator</a> &emsp; 
-    <!-- <a > <img src="../static/img/settings.png" style="width:40px;height:40px;"></img> Settings</a> -->
-    <a> <img src="../static/img/settings.png" style="width:50px;height:50px;"></img> Settings </a>
+    <a class="active">High Energy Ventilator</a>
     <div class="topnav-right" Text color: black>
     <span id="time"></span> &emsp; 
     </div>
   </div>
 
 
+  </div>
 
+<div class="sidenav">
+  <a href="#about">Home</a>
+  <a href="#services">Settings	</a>
+</div>
+
+<div class="content">
 
 
   <div class="container-fluid" style="display: inline-block" >
@@ -62,9 +67,7 @@
 
   <div class="spacer"></div>
 
-
-<div class="square" id='temperature'></div>
-<div class="square" id='pressure'></div>
+</div>
 
 
 
@@ -106,17 +109,15 @@ function checkTime(i) {
 
 <script>
 
-// Example for parsing Json
 //var txt = '{ "fruit": "pineapple", "fingers": 10 }';
 //var obj = JSON.parse(txt);
 //console.log(obj.fruit);
+//document.getElementById("demo").innerHTML = obj.fruit;
 
-var txt = {{result.data|tojson|safe}} ;
+//var txt = '{{result.data}}' ;
 //var obj = JSON.stringify(txt)
-var obj = JSON.parse(txt);
-document.getElementById("pressure").innerHTML = obj.pressure;
-document.getElementById("temperature").innerHTML = obj.temperature;
-
+//var obj = JSON.parse(txt[]);
+//console.log(obj);
 </script>
 
 
