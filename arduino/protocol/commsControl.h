@@ -90,14 +90,14 @@ public:
 // ACK specific class - contains specific control flag
 class commsACK : public commsFormat {
 public:
-  commsACK()  : commsFormat() { *getControl() = 0x00; } // contains 0 information bytes, has specific control type
+  commsACK()  : commsFormat() { *(getControl()+1) = 0x00; } // contains 0 information bytes, has specific control type
 };
 
 ///////////////////////////////////////////////////////////////////////////
 // NACK specific class - contains specific control flag
 class commsNACK: public commsFormat {
 public:
-  commsNACK() : commsFormat() { *getControl() = 0x04; } // contains 0 information bytes, has specific control type
+  commsNACK() : commsFormat() { *(getControl()+1) = 0x04; } // contains 0 information bytes, has specific control type
 };
 
 
@@ -124,7 +124,7 @@ public:
 
   void receiver();
   void receiveData(DataQueue<commsDATA>* queue);
-  bool decoder(uint8_t* data, uint8_t dataSize);
+  bool decoder(uint8_t* data, uint8_t dataStart, uint8_t dataStop);
   
 private:
   DataQueue<commsDATA> queueAlarm_;
@@ -141,6 +141,7 @@ private:
   uint8_t dataSendSize_;
 
   uint8_t lastTrans_[CONST_MAX_SIZE_BUFFER];
+  uint8_t startTransIndex_;
   uint8_t lastTransIndex_;
 
   bool foundStart_;
@@ -151,7 +152,8 @@ commsControl::commsControl(uint32_t baudrate)
   baudrate_ = baudrate;
   
   lastTransTime_ = millis();
-  
+
+  startTransIndex_  = 0xFF;
   lastTransIndex_   = 0;
   dataReceivedSize_ = 0;
   dataSendSize_     = 0;
@@ -180,18 +182,61 @@ void commsControl::sender() {
 // main function to always try to receive data
 // TODO: needs switch on data type with global timeouts on data pushing
 void commsControl::receiver() {
+  uint8_t currentTransIndex;
+  
+  // check if any data in waiting
   if (Serial.available()) {
-    
+    // while able to read data
     while (Serial.peek() > 0) {
-      // read byte by byte
+  
+      // read byte by byte, just in case the transmission is somehow blocked
       lastTransIndex_ += Serial.readBytes(lastTrans_ + lastTransIndex_, 1);
-
-
-      // TODO deal with foundStard
       
-      if (foundStart_ && lastTransIndex_ > 0 && lastTrans_[lastTransIndex_-1] == 0x7E) {
-        decoder(lastTrans_, lastTransIndex_);
-        break;
+      // if managed to read at least 1 byte
+      if (lastTransIndex_ > 0 && lastTransIndex_ < CONST_MAX_SIZE_BUFFER) {
+        currentTransIndex = lastTransIndex_ - 1;
+        
+        // find the boundary of frames
+        if (lastTrans_[currentTransIndex] == 0x7E) {
+          
+          // if not found start or if read the same byte as last time
+          if (!foundStart_ || startTransIndex_ == currentTransIndex) {
+            foundStart_ = true;            
+            startTransIndex_ = currentTransIndex;
+          } else {
+            // if managed to decode
+            if (decoder(lastTrans_, startTransIndex_, lastTransIndex_)) {
+              uint8_t type = dataReceived_[3];
+            // TODO: switch on received data to know what to do - received ACK/NACK or commands
+              switch(type) {
+                case 0x04:
+                  Serial.println("NACK");
+                  // received NACK
+                  break;
+                case 0x00:
+                  Serial.println("ACK");
+                  // received ACK
+                  break;
+//                case :
+//                  // received DATA
+//                  receiveData();
+//                  break;
+                default:
+                  break;
+              }              
+            }
+
+            // reset the frame
+            foundStart_ = false;
+            lastTransIndex_ = 0;
+            startTransIndex_ = 0xFF;
+
+            // break the loop, even if more data waiting in the bus - this frame is finished
+            break;            
+          }
+        }
+      } else if (lastTransIndex_ >= CONST_MAX_SIZE_BUFFER) {
+        lastTransIndex_ = 0;
       }
     }  
   }
@@ -231,7 +276,7 @@ bool commsControl::encoder(uint8_t* data, uint8_t dataSize) {
     tmpVal = data[idx];
     if (tmpVal == 0x7D || tmpVal == 0x7E) {
       dataSend_[dataSendSize_++] = 0x7D;
-      tmpVal ^= (1<<4);
+      tmpVal ^= (1 << CONST_ESCAPE_BIT_SWAP);
     }
     dataSend_[dataSendSize_++] = tmpVal;
   }
@@ -241,25 +286,30 @@ bool commsControl::encoder(uint8_t* data, uint8_t dataSize) {
 
 
 // general decoder of any transmission
-bool commsControl::decoder(uint8_t* data, uint8_t dataSize) {
-  dataReceivedSize_ = 0;
-  uint8_t tmpVal = 0;
-  bool escaped = false;
-  
-  for (uint8_t idx = 0; idx < dataSize; idx++) {
-    tmpVal = data[idx];
-    if (tmpVal == 0x7D) {
-      escaped = true;
-    } else {
-      if (escaped) {
-        tmpVal ^= (1<<4);
-        escaped = false;
+bool commsControl::decoder(uint8_t* data, uint8_t dataStart, uint8_t dataStop) {
+  // need to have more than 1 byte transferred
+  if (dataStop > dataStart+1) {
+    dataReceivedSize_ = 0;
+    uint8_t tmpVal = 0;
+    bool escaped = false;
+    
+    for (uint8_t idx = dataStart; idx < dataStop; idx++) {
+      tmpVal = data[idx];
+      if (tmpVal == 0x7D) {
+        escaped = true;
+      } else {
+        if (escaped) {
+          tmpVal ^= (1 << CONST_ESCAPE_BIT_SWAP);
+          escaped = false;
+        }
+        dataReceived_[dataReceivedSize_++] = tmpVal;    
       }
-      dataReceived_[dataReceivedSize_++] = tmpVal;    
     }
+    return true;    
+  } else {
+    return false;
   }
-  
-  return true;
+  return false;
 }
 
 // sending anything of commsDATA format

@@ -5,6 +5,8 @@
 #define CONST_MAX_SIZE_PACKET 32
 #define CONST_MAX_SIZE_BUFFER 64
 
+#define CONST_ESCAPE_BIT_SWAP 5
+
 // struct for all data sent
 // TODO: the same for all settings?
 struct dataFormat {
