@@ -2,22 +2,21 @@
 
 ### Backend and frontend for homemade ventilators
 
-- Author: **Adam Abed Abud**
 - Mail: adam.abed.abud@cern.ch
-- Last update: March 28, 2020
+- Last update: April 2, 2020
 
 
-**Backend:** python & flask
+**Backend:** python, flask, sqlite 
 **Frontend:** Javascript, HTML 
 
 
 # Usage
 Before starting the web application you will need the following packages to be installed on the RP:
 
-
+```sh
 sudo pip3 install flask
 sudo apt-get install sqlite3
-
+```
 
 
 
@@ -31,13 +30,13 @@ This will start the server and it will simulate data coming from two different s
 Start the web application. 
 
 ```sh
-python app.py
+python3 app.py
 ```
 
 Start firefox with the following address:
 
 ```sh
-firefox 127.0.0.1:5000
+firefox 127.0.0.1:5000/new
 ```
 
 
