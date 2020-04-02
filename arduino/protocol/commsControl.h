@@ -29,6 +29,7 @@ public:
   uint8_t* getStop()        {return data_ + 4 + infoSize_ + 2;}         // ending flag of the chain
 
   void setCounter(uint8_t counter);
+  void copyData(uint8_t* data, uint8_t dataSize);
 
 private:
   uint8_t  data_[CONST_MAX_SIZE_PACKET];
@@ -42,12 +43,15 @@ commsFormat::commsFormat(uint8_t infoSize) {
   memset(data_, 0, sizeof(data_));
   
   infoSize_   = infoSize;
-  packetSize_ = infoSize + 7; // minimum size is 7 (start,address,control,fcs,stop)
+  packetSize_ = infoSize + CONST_MIN_SIZE_PACKET ; // minimum size (start,address,control,fcs,stop)
+  if (packetSize_ > CONST_MAX_SIZE_PACKET) {
+    return;
+  }
 
   // hardcoded defaults
-  *getStart()   = 0x7E; // fixed start flag
+  *getStart()   = COMMS_FRAME_BOUNDARY; // fixed start flag
   *getAddress() = 0xFF; // 0xFF means sending to all devices
-  *getStop()    = 0x7E; // fixed stop flag
+  *getStop()    = COMMS_FRAME_BOUNDARY; // fixed stop flag
 }
 
 void commsFormat::setCounter(uint8_t counter) {
@@ -85,39 +89,46 @@ void commsFormat::setInformation(dataFormat* values) {
   memcpy(getInformation(), &values->count, 2);
 }
 
+void commsFormat::copyData(uint8_t* data, uint8_t dataSize) {
+  infoSize_ = dataSize - CONST_MIN_SIZE_PACKET;
+  packetSize_ = dataSize;
+  memset(data_,    0, sizeof(data_));
+  memcpy(data_, data,     dataSize );
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // DATA specific class - contains X bytes of data
 class commsDATA: public commsFormat {
 public:
-  commsDATA() : commsFormat(8) { *(getControl()) = 0x40; } // contains 8 information bytes
+  commsDATA() : commsFormat(8) { *(getAddress()) = 0x40; } // contains 8 information bytes
 };
 
 ///////////////////////////////////////////////////////////////////////////
 // ALARM specific class - contains X bytes of data and specific control flag
 class commsALARM: public commsFormat {
 public:
-  commsALARM() : commsFormat(4) { *(getControl()+1) = 0xC0; *(getControl()+1) = 0x02; } // contains 8 information bytes
+  commsALARM() : commsFormat(4) { *(getAddress()) = 0xC0; } // contains 4 information bytes
 };
 
 ///////////////////////////////////////////////////////////////////////////
 // CMD specific class - contains X bytes of data and specific control flag
 class commsCMD: public commsFormat {
 public:
-  commsCMD() : commsFormat(8) { *(getControl()) = 0x80; } // contains 8 information bytes
+  commsCMD() : commsFormat(8) { *(getAddress()) = 0x80; } // contains 8 information bytes
 };
 
 ///////////////////////////////////////////////////////////////////////////
 // ACK specific class - contains specific control flag
 class commsACK : public commsFormat {
 public:
-  commsACK()  : commsFormat() { *(getControl()+1) = 0x01; } // contains 0 information bytes, has specific control type
+  commsACK()  : commsFormat() { *(getControl()+1) = COMMS_CONTROL_ACK; } // contains 0 information bytes, has specific control type
 };
 
 ///////////////////////////////////////////////////////////////////////////
 // NACK specific class - contains specific control flag
 class commsNACK: public commsFormat {
 public:
-  commsNACK() : commsFormat() { *(getControl()+1) = 0x05; } // contains 0 information bytes, has specific control type
+  commsNACK() : commsFormat() { *(getControl()+1) = COMMS_CONTROL_NACK; } // contains 0 information bytes, has specific control type
 };
 
 
@@ -136,33 +147,38 @@ public:
 
   void beginSerial();
 
+  // TODO: passed as struct, or simply array of size and memcpy? should be dataType or just define?
   void registerData(dataType type, dataFormat* values);
 
   void sender();
-  void sendPacket(DataQueue<commsFormat>* queue);
-  void resendPacket(DataQueue<commsFormat>* queue);
-  bool encoder(uint8_t* data, uint8_t dataSize);
-
   void receiver();
-  void receivePacket(DataQueue<commsFormat>* queue);
-  bool decoder(uint8_t* data, uint8_t dataStart, uint8_t dataStop);
 
 private:
-  DataQueue<commsFormat>* getQueue(uint8_t fmt);
-  
+  DataQueue<commsFormat>* getQueue(uint8_t address);
+
+  void sendPacket   (DataQueue<commsFormat>* queue);
+  void resendPacket (DataQueue<commsFormat>* queue);
+  void receivePacket(DataQueue<commsFormat>* queue);
+  void finishPacket (DataQueue<commsFormat>* queue);
+
+  bool encoder(uint8_t* data, uint8_t dataSize);
+  bool decoder(uint8_t* data, uint8_t dataStart, uint8_t dataStop);
+
 private:
   DataQueue<commsALARM> queueAlarm_;
   DataQueue<commsDATA> queueData_;
   DataQueue<commsCMD> queueCmd_;
 
+  commsFormat commsTmp_;
+
   uint32_t baudrate_;
 
   uint64_t lastTransTime_;
 
-  uint8_t dataReceived_[CONST_MAX_SIZE_BUFFER];
-  uint8_t dataReceivedSize_;
-  uint8_t dataSend_    [CONST_MAX_SIZE_BUFFER];
-  uint8_t dataSendSize_;
+  uint8_t commsReceived_[CONST_MAX_SIZE_BUFFER];
+  uint8_t commsReceivedSize_;
+  uint8_t commsSend_    [CONST_MAX_SIZE_BUFFER];
+  uint8_t commsSendSize_;
 
   uint8_t lastTrans_[CONST_MAX_SIZE_BUFFER];
   uint8_t startTransIndex_;
@@ -178,16 +194,18 @@ commsControl::commsControl(uint32_t baudrate) {
 
   startTransIndex_  = 0xFF;
   lastTransIndex_   = 0;
-  dataReceivedSize_ = 0;
-  dataSendSize_     = 0;
+  commsReceivedSize_ = 0;
+  commsSendSize_     = 0;
   memset(lastTrans_   , 0, sizeof(lastTrans_   ));
-  memset(dataReceived_, 0, sizeof(dataReceived_));
-  memset(dataSend_    , 0, sizeof(dataSend_    ));
+  memset(commsReceived_, 0, sizeof(commsReceived_));
+  memset(commsSend_    , 0, sizeof(commsSend_    ));
   foundStart_ = false;
   
   queueAlarm_ = DataQueue<commsALARM>(CONST_MAX_SIZE_QUEUE);
   queueData_  = DataQueue<commsDATA> (CONST_MAX_SIZE_QUEUE);
   queueCmd_   = DataQueue<commsCMD>  (CONST_MAX_SIZE_QUEUE);
+
+  commsTmp_   = commsFormat(CONST_MAX_SIZE_PACKET - CONST_MIN_SIZE_PACKET );
 }
 
 void commsControl::beginSerial() {
@@ -201,7 +219,7 @@ void commsControl::sender() {
     sendPacket(reinterpret_cast<DataQueue<commsFormat>*>(&queueAlarm_));
   }
   
-  if (millis() > lastTransTime_ + 50 ) {
+  if (millis() > lastTransTime_ + 5000 ) {
     sendPacket(reinterpret_cast<DataQueue<commsFormat>*>(&queueData_));
   }
 }
@@ -213,7 +231,7 @@ void commsControl::receiver() {
   
   // check if any data in waiting
   if (Serial.available()) {
-    // while able to read data - unable is -1
+    // while able to read data (unable == -1)
     while (Serial.peek() >= 0) {
       // read byte by byte, just in case the transmission is somehow blocked
       lastTransIndex_ += Serial.readBytes(lastTrans_ + lastTransIndex_, 1);
@@ -223,39 +241,38 @@ void commsControl::receiver() {
         currentTransIndex = lastTransIndex_ - 1;
 
         // find the boundary of frames
-        if (lastTrans_[currentTransIndex] == 0x7E) {
+        if (lastTrans_[currentTransIndex] == COMMS_FRAME_BOUNDARY) {
           // if not found start or if read the same byte as last time
           if (!foundStart_ || startTransIndex_ == currentTransIndex) {
             foundStart_ = true;            
             startTransIndex_ = currentTransIndex;
           } else {
-            // if managed to decode
+            // if managed to decode and compare CRC
             if (decoder(lastTrans_, startTransIndex_, lastTransIndex_)) {
 
               // to decide ACK/NACK/other
-              uint8_t type = dataReceived_[3];
+              uint8_t control = commsReceived_[3];
 
-              // to decide what kind of packets
-              uint8_t fmt  = dataReceived_[2]; 
-              DataQueue<commsFormat>* tmpQueue = getQueue(fmt);
+              // to decide what kind of packets received
+              uint8_t address  = commsReceived_[1];
+              DataQueue<commsFormat>* tmpQueue = getQueue(address);
               if (tmpQueue != NULL) {
                 // switch on received data to know what to do - received ACK/NACK or other
-                switch(type & 0x0F) {
-                  case 0x05:
+                switch(control & COMMS_CONTROL_TYPES) {
+                  case COMMS_CONTROL_NACK:
                     // received NACK
-                    // TODO modify timeout for next sent frame
+                    // TODO: modify timeout for next sent frame?
                     resendPacket(tmpQueue);
                     break;
-                  case 0x01:
+                  case COMMS_CONTROL_ACK:
                     // received ACK
-                    // TODO remove from FIFO
-                    receivePacket(tmpQueue);
+                    finishPacket(tmpQueue);
                     break;
                   default:
                     // received DATA
-                    // TODO process data
+                    receivePacket(tmpQueue);
                     break;
-                }                            
+                }
               }
             }
 
@@ -304,19 +321,19 @@ void commsControl::registerData(dataType type, dataFormat* values) {
 // general encoder of any transmission
 bool commsControl::encoder(uint8_t* data, uint8_t dataSize) {
   if (dataSize > 0) {
-    dataSendSize_ = 0;
+    commsSendSize_ = 0;
     uint8_t tmpVal = 0;
 
-    dataSend_[dataSendSize_++] = data[0];
+    commsSend_[commsSendSize_++] = data[0];
     for (uint8_t idx = 1; idx < dataSize - 1; idx++) {
       tmpVal = data[idx];
-      if (tmpVal == 0x7D || tmpVal == 0x7E) {
-        dataSend_[dataSendSize_++] = 0x7D;
-        tmpVal ^= (1 << CONST_ESCAPE_BIT_SWAP);
+      if (tmpVal == COMMS_FRAME_ESCAPE || tmpVal == COMMS_FRAME_BOUNDARY) {
+        commsSend_[commsSendSize_++] = COMMS_FRAME_ESCAPE;
+        tmpVal ^= (1 << COMMS_ESCAPE_BIT_SWAP);
       }
-      dataSend_[dataSendSize_++] = tmpVal;
+      commsSend_[commsSendSize_++] = tmpVal;
     }
-    dataSend_[dataSendSize_++] = data[dataSize-1];
+    commsSend_[commsSendSize_++] = data[dataSize-1];
   
     return true;  
   }
@@ -327,24 +344,25 @@ bool commsControl::encoder(uint8_t* data, uint8_t dataSize) {
 // general decoder of any transmission
 bool commsControl::decoder(uint8_t* data, uint8_t dataStart, uint8_t dataStop) {
   // need to have more than 1 byte transferred
-  if (dataStop > dataStart+1) {
-    dataReceivedSize_ = 0;
+  if (dataStop > (dataStart + 1)) {
+    commsReceivedSize_ = 0;
     uint8_t tmpVal = 0;
     bool escaped = false;
     
     for (uint8_t idx = dataStart; idx < dataStop; idx++) {
       tmpVal = data[idx];
-      if (tmpVal == 0x7D) {
+      if (tmpVal == COMMS_FRAME_ESCAPE) {
         escaped = true;
       } else {
         if (escaped) {
-          tmpVal ^= (1 << CONST_ESCAPE_BIT_SWAP);
+          tmpVal ^= (1 << COMMS_ESCAPE_BIT_SWAP);
           escaped = false;
         }
-        dataReceived_[dataReceivedSize_++] = tmpVal;    
+        commsReceived_[commsReceivedSize_++] = tmpVal;    
       }
     }
-    return true;    
+    commsTmp_.copyData(commsReceived_, commsReceivedSize_);
+    return commsTmp_.compareCrc();
   }
   return false;
 }
@@ -358,18 +376,18 @@ void commsControl::sendPacket(DataQueue<commsFormat>* queue) {
 
     // if encoded and able to write data
     if (encoder(queue->front().getData(), queue->front().getSize()) ) {
-      if (Serial.availableForWrite() >= dataSendSize_) {
+      if (Serial.availableForWrite() >= commsSendSize_) {
 
         // TODO define transmission counter
         // queue->front().setCounter(someValue)
 
-        Serial.write(dataSend_, dataSendSize_);
+        Serial.write(commsSend_, commsSendSize_);
       }
     }
   }
 }
 
-// resending the queue values
+// resending the packet, can lower the timeout since either NACK or wrong FCS already checked
 //WIP
 void commsControl::resendPacket(DataQueue<commsFormat>* queue) {
   ;
@@ -379,12 +397,17 @@ void commsControl::resendPacket(DataQueue<commsFormat>* queue) {
 // receiving anything of commsFormat
 // WIP
 void commsControl::receivePacket(DataQueue<commsFormat>* queue) {
+  ;
+}
+
+// if FCS is ok, remove from queue
+void commsControl::finishPacket(DataQueue<commsFormat>* queue) {
   queue->dequeue();
 }
 
 // get link to queue according to packet format
-DataQueue<commsFormat>* commsControl::getQueue(uint8_t fmt) {
-  switch (fmt & PACKET_TYPE) {
+DataQueue<commsFormat>* commsControl::getQueue(uint8_t address) {
+  switch (address & PACKET_TYPE) {
     case PACKET_ALARM:
       return reinterpret_cast<DataQueue<commsFormat>*>(&queueAlarm_);
     case PACKET_CMD:
