@@ -29,3 +29,6 @@ const int pin_lcd_d4         = 11;
 const int pin_lcd_d5         = 12;
 const int pin_lcd_d6         = 13;
 const int pin_lcd_d7         = 14;
+
+    // buttons
+const int pin_button_0       = 1;

@@ -23,6 +23,9 @@ const int pin_led_2          = 10;
     // buzzer
 const int pin_buzzer         = 11;
 
+    // buttons
+const int pin_button_0       = 2;
+
 // lcd Not enough GPIOs, we can use I2C if needed NOTE: This code was not tested through I2C
 // constants needed 
 // by default static DO NOT UNCOMMENT SDA AND SCL LINES

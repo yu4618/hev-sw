@@ -16,6 +16,12 @@
 #elif defined(ARDUINO_SAMD_MKRWIFI1010)
 #define BOARD "MKR1010"
 #include <Arduino_MKR_1010_WIFI_pinout.h>
+#elif defined(ARDUINO_SAM_DUE)
+#define BOARD "MKR1010"
+#include <Arduino_Due_pinout.h>
+#elif defined(ARDUINO_AVR_YUN)
+#define BOARD "MKR1010"
+#include <Arduino_Yun_pinout.h>
 #endif
 
 //LiquidCrystal lcd(pin_lcd_rs, pin_lcd_en, pin_lcd_d4, pin_lcd_d5, pin_lcd_d6, pin_lcd_d7);
@@ -125,7 +131,7 @@ void setup()
     pinMode(pin_led_2, OUTPUT);
 
     pinMode(pin_buzzer, OUTPUT);
-    pinMode(pin_button, INPUT);
+    pinMode(pin_button_0, INPUT);
 
     Serial.begin(9600);
 
@@ -148,7 +154,7 @@ void breath_cycle()
     switch (bs_state)
     {
     case BS_IDLE:
-        start = digitalRead(pin_button);
+        start = digitalRead(pin_button_0);
         if (start == HIGH)
         {
             next_state = BS_BUFF_PREFILL;

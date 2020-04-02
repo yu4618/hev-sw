@@ -8,8 +8,6 @@
 // global variables
 static int globalcnt = 0;
 
-
-
 class SafetyAlarmLoop : public VariableTimedAction
 {
   private:

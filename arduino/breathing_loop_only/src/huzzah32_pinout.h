@@ -13,7 +13,7 @@ const int pin_p_regulated    = A1;
 const int pin_p_buffer       = A2;
 const int pin_p_inhale       = A3;
 const int pin_p_patient      = A4;
-const int pin_temp           = A5;
+const int pin_temp           = A13;
 
     // leds
 const int pin_led_0          = 33;
@@ -22,6 +22,9 @@ const int pin_led_2          = 32;
 
     // buzzer
 const int pin_buzzer         = 14;
+
+    // buttons
+const int pin_button_0       = 4;
 
 // lcd Not enough GPIOs, we can use I2C if needed NOTE: This code was not tested through I2C
 // constants needed 

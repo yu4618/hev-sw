@@ -1,4 +1,4 @@
-// Arduino Uno
+// Arduino Yun
 //#include <LiquidCrystal.h>
     // pwm pins
 const int pin_valve_in       = 11;
@@ -23,11 +23,11 @@ const int pin_led_2          = 2;
 const int pin_buzzer         = 9;
 
     // lcd
-// const int pin_lcd_rs         = 13;
-// const int pin_lcd_en         = 4;
-// const int pin_lcd_d4         = 7;
-// const int pin_lcd_d5         = 8;
-// const int pin_lcd_d6         = 10;
-// const int pin_lcd_d7         = 12;
+const int pin_lcd_rs         = 13;
+const int pin_lcd_en         = 4;
+const int pin_lcd_d4         = 7;
+const int pin_lcd_d5         = 8;
+const int pin_lcd_d6         = 10;
+const int pin_lcd_d7         = 12;
 
-const int pin_button_0       = 13;
+const int pin_button_0       = 1;
