@@ -18,6 +18,10 @@ WEBAPP = Flask(__name__)
 def hello_world():
     return render_template('index.html', result=live_data())
 
+@WEBAPP.route('/new')
+def hello_worlds():
+    return render_template('index_v3.html', result=live_data())
+
 @WEBAPP.route('/live-data')
 def live_data():
     """
