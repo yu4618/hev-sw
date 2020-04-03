@@ -37,8 +37,8 @@ def live_data():
         cursor.execute("SELECT created_at, temperature, pressure FROM hec_monitor ORDER BY ROWID DESC LIMIT 1")
         fetched = cursor.fetchone()
         data['created_at'] = fetched[0]
-        data['temperature'] = fetched[1]
-        data['pressure'] = fetched[2]
+        data['temperature'] = round(fetched[1],3)
+        data['pressure'] = round(fetched[2],3)
 
 
     #json_string = json.dumps(data, ensure_ascii = False)

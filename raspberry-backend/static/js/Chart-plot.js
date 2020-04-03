@@ -68,7 +68,7 @@ $(document).ready(function() {
           },
           options: {
             title: {
-              display: true,
+              display: false,
               text: 'Variable 1'
             },
             scales: {
@@ -79,7 +79,9 @@ $(document).ready(function() {
                     displayFormat: 'second'
                 }
             }]
-        }
+	    },
+		legend : {
+		    display: false}
           }
     });
     requestDataVar1();
@@ -104,7 +106,7 @@ $(document).ready(function() {
           },
           options: {
             title: {
-              display: true,
+              display: false,
               text: 'Variable 2'
             },
             scales: {
@@ -115,8 +117,11 @@ $(document).ready(function() {
                     displayFormat: 'second'
                 }
             }]
-        }
-          }
+            },
+	legend : {
+	    display: false
+	}
+	  }
     });
     requestDataVar2();
 });
