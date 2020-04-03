@@ -1,5 +1,5 @@
+#include <Arduino.h>
 #include "commsControl.h"
-#include "constants.h"
 
 #define LED_BLUE   5
 #define LED_GREEN  7
@@ -65,7 +65,6 @@ void loop() {
       switchLED(LED_BLUE);
       // counter increase on button press
       data.count += 62;
-
       // register new data in comms
       comms.registerData(dataNormal, &data);
     }
