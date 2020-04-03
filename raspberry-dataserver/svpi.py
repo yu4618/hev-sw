@@ -29,9 +29,15 @@ def getAlarms() -> List[str]:
     return ["none"]
 
 
-def setMode(mode) -> str:
+def setMode(mode: str) -> str:
     # setting a mode - just print it
     print(f"Setting mode {mode}")
+    return f"{mode}"
+
+
+def setThresholds(thresholds: List[float]) -> str:
+    # setting thresholds - just print them
+    print(f"Setting thresholds {thresholds}")
     return f"{mode}"
 
 
