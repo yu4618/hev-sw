@@ -19,7 +19,7 @@ class HEVServer(object):
         self._broadcasting_period = 1
         self._broadcasting = True
 
-        worker = threading.Thread(target=self.polling)
+        worker = threading.Thread(target=self.polling, daemon=True)
         worker.start()
 
     def __repr__(self):
@@ -34,7 +34,7 @@ class HEVServer(object):
     async def handle_request(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         data = await reader.read(300)
         request = json.loads(data.decode("utf-8"))
-        mode = request["setmode"]
+        mode = request["mode"]
 
         addr = writer.get_extra_info("peername")
 
@@ -43,7 +43,7 @@ class HEVServer(object):
         payload = svpi.setMode(mode)
 
         writer.write(
-            f"""{{"type": "ack", "setmode": \"{payload}\"}}""".encode())
+            f"""{{"type": "ackmode", "mode": \"{payload}\"}}""".encode())
         await writer.drain()
 
         writer.close()
