@@ -22,7 +22,7 @@ def hello_world():
 def hello_worlds():
     return render_template('index_v3.html', result=live_data())
 
-@WEBAPP.route('/live-data')
+@WEBAPP.route('/live-data', methods=['GET'])
 def live_data():
     """
     Query the sqlite3 table

@@ -10,7 +10,7 @@ from typing import List
 
 def getValues() -> List[float]:
     # All sensor readings 32 bit floats
-    sensor_value: List[float] = np.random.uniform(0.0, 1000.0, 5).tolist()
+    sensor_value: List[float] = np.random.uniform(0.0, 1000.0, 6).tolist()
     return sensor_value
 
 

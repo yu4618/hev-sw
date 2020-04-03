@@ -213,22 +213,34 @@ function checkTime(i) {
 }
 </script>
 
+
 <script>
-
 // Example for parsing Json
-//var txt = '{ "fruit": "pineapple", "fingers": 10 }';
-//var obj = JSON.parse(txt);
-//console.log(obj.fruit);
-
 var txt = {{result.data|tojson|safe}} ;
-//var obj = JSON.stringify(txt)
 var obj = JSON.parse(txt);
-document.getElementById("pressure").innerHTML = obj.pressure;
-document.getElementById("temperature").innerHTML = obj.temperature;
-document.getElementById("pressure2").innerHTML = obj.pressure;
-document.getElementById("temperature2").innerHTML = obj.temperature;
-
+//document.getElementById("pressure").innerHTML = obj.pressure;
+//document.getElementById("temperature").innerHTML = obj.temperature;
+//document.getElementById("pressure2").innerHTML = obj.pressure;
+//document.getElementById("temperature2").innerHTML = obj.temperature;
 </script>
+
+
+
+<script type=text/javascript>
+function update_variables() {
+    $.getJSON("live-data",
+            function (data) {
+                document.getElementById("pressure").innerHTML = data.pressure;
+                document.getElementById("temperature").innerHTML = data.temperature;
+                document.getElementById("pressure2").innerHTML = data.pressure;
+                document.getElementById("temperature2").innerHTML = data.temperature;
+            }
+    );
+}
+setInterval('update_variables()', 2000);
+</script>
+
+
 
 	
     </body>

@@ -4,5 +4,10 @@ rpi-swlist:
   - openssh-server
   - minicom
   - python3-serial
+  - flask
+  - sqlite3
+
+pip-list: 
+  - libscrc
 
   
