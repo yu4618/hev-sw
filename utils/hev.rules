@@ -1,0 +1,4 @@
+# Arduino uno
+ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0043", ACTION=="bind", SUBSYSTEM=="usb", DRIVERS=="cdc_acm", RUN+="/bin/su -c /home/pi/hev-sw/utils/hevcheck.sh"
+
+# Add other devices similarly. Find idVendor:idProduct from lsusb
