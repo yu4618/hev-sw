@@ -29,16 +29,25 @@ def live_data():
     Output in json format
     """
 
-    data = {'created_at' : None, 'temperature' : None, 'pressure' : None}
+    data = {'created_at' : None, 'temperature' : None, 
+            'pressure' : None, 'variable3' : None, 
+            'variable4' : None, 'variable5' : None, 'variable6' : None}
 
     sqlite_file = 'database/HEC_monitoringDB.sqlite'
     with sqlite3.connect(sqlite_file) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT created_at, temperature, pressure FROM hec_monitor ORDER BY ROWID DESC LIMIT 1")
+        cursor.execute("SELECT created_at, temperature, "
+        "pressure, variable3, variable4, variable5, variable6 "
+        "FROM hec_monitor ORDER BY ROWID DESC LIMIT 1")
+        
         fetched = cursor.fetchone()
         data['created_at'] = fetched[0]
         data['temperature'] = round(fetched[1],3)
         data['pressure'] = round(fetched[2],3)
+        data['variable3'] = round(fetched[3],3)
+        data['variable4'] = round(fetched[4],3)                
+        data['variable5'] = round(fetched[5],3)                
+        data['variable6'] = round(fetched[6],3)                
 
 
     #json_string = json.dumps(data, ensure_ascii = False)

@@ -1,13 +1,14 @@
-## High Energy Ventilator   
+## High Energy Ventilator (HEV)
 
-### Backend and frontend for homemade ventilators
+### Raspberry Pi backend and monitoring frontend for the High Energy Ventilators project 
 
+- Author: Adam Abed Abud <
 - Mail: adam.abed.abud@cern.ch
 - Last update: April 2, 2020
 
 
-**Backend:** python, flask, sqlite 
-**Frontend:** Javascript, HTML 
+**Backend:** Python3, Flask, sqlite3 
+**Frontend:** Javascript, HTML, ChartsJS
 
 
 # Usage
@@ -18,9 +19,16 @@ sudo pip3 install flask
 sudo apt-get install sqlite3
 ```
 
+Start the HEV server
+
+```sh
+cd raspberry-dataserver
+python3 hevserver.py
+```
 
 
 ```sh
+cd raspberry-backend
 python3 arduino_recorder.py
 ```
 This will start the server and it will simulate data coming from two different sensors
@@ -30,6 +38,7 @@ This will start the server and it will simulate data coming from two different s
 Start the web application. 
 
 ```sh
+cd raspberry-backend
 python3 app.py
 ```
 
