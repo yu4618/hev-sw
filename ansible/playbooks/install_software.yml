@@ -1,25 +1,46 @@
-- hosts: rpi
+---
+- hosts: cernpi
+  remote_user: pi
   vars:
-    download_dir: /home/pi/Downloads
+        download_dir: /home/pi/Downloads
 
-- name: include vars
-  include_vars: lists.yml
+  tasks: 
+        - name: include vars
+          include_vars: lists.yml
 
-- name: install software via apt
-  apt: 
-    name: "{{ item }}"
-    state: installed
-  with_items: "{{ rpi-swlist }}"  
+        - name: install software via apt
+          apt: 
+              name: "{{ item }}"
+              state: present
+          with_items: "{{ rpi_swlist }}"  
+          become: yes
+        
+        - name: mk sw dir
+          file:
+              path: /home/pi/sw/bin
+              state: directory
 
-- name: install arduino suite
-  command: ./arduino_suite.sh
+        - name: copy platformio script
+          template: src=platform-io.sh dest={{ download_dir }} owner=pi group=pi mode=0755
+
+        - name: install platformio
+          command: "{{ download_dir }}/platform-io.sh"
+
+        - name: pip install packages
+          pip:
+              executable: /usr/bin/pip3
+              name: "{{ item }}"
+          with_items: "{{ pip_list }}"  
+
+  #- name: install arduino suite
+  #command: ./arduino_suite.sh
 
   #get_url: 
-    #url: https://www.arduino.cc/download_handler.php?f=/arduino-1.8.12-linuxarm.tar.xz
-    #dest: "{{ download_dir }}"
+  #url: https://www.arduino.cc/download_handler.php?f=/arduino-1.8.12-linuxarm.tar.xz
+  #dest: "{{ download_dir }}"
 
-#- name: untar arduino suite
+  #- name: untar arduino suite
   #unarchive: 
-    #src: "{{ download_dir }}/arduino-1.8.12-linuxarm.tar.xz"
-    #dest: "{{ download_dir }}"
-    
+  #src: "{{ download_dir }}/arduino-1.8.12-linuxarm.tar.xz"
+  #dest: "{{ download_dir }}"
+

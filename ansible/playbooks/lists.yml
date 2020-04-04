@@ -1,13 +1,13 @@
-rpi-swlist:
+rpi_swlist:
   - vim
   - cowsay
   - openssh-server
   - minicom
   - python3-serial
-  - flask
+  - python3-flask
   - sqlite3
 
-pip-list: 
+pip_list: 
   - libscrc
 
   
