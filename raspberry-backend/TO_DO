@@ -1,0 +1,11 @@
+
+List of missing features and/or improvements
+
+
+-- arduino_recorder.py and app.py: template the list of variables to plot
+
+-- Add backup of the DB every X minutes
+
+-- UI: sideabar reduce and show only icons; test on 16 inch display; insert alarms (flashing lights and text) 
+
+

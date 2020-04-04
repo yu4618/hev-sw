@@ -34,18 +34,30 @@ class HEVServer(object):
     async def handle_request(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         data = await reader.read(300)
         request = json.loads(data.decode("utf-8"))
-        mode = request["mode"]
-
         addr = writer.get_extra_info("peername")
+        payload = ""
 
-        print(f"{addr!r} requested to change to mode {mode!r}")
+        if request["type"] == "setmode":
+            mode = request["mode"]
+            print(f"{addr!r} requested to change to mode {mode!r}")
+            payload = svpi.setMode(mode)
+            packet = f"""{{"type": "ackmode", "mode": \"{payload}\"}}""".encode()
+        elif request["type"] == "setthresholds":
+            thresholds = request["thresholds"]
+            print(f"{addr!r} requested to set thresholds to {thresholds!r}")
+            payload = svpi.setThresholds(thresholds)
+            packet = f"""{{"type": "ackthresholds", "thresholds": \"{payload}\"}}""".encode()
+        elif request["type"] == "setup":
+            mode = request["mode"]
+            thresholds = request["thresholds"]
+            print(f"{addr!r} requested to change to mode {mode!r}")
+            print(f"{addr!r} requested to set thresholds to {thresholds!r}")
+            payload1 = svpi.setMode(mode)
+            payload2 = svpi.setThresholds(thresholds)
+            packet = f"""{{"type": "ack", "mode": \"{payload1}\", "thresholds": \"{payload2}\"}}""".encode()
 
-        payload = svpi.setMode(mode)
-
-        writer.write(
-            f"""{{"type": "ackmode", "mode": \"{payload}\"}}""".encode())
+        writer.write(packet)
         await writer.drain()
-
         writer.close()
 
     async def handle_broadcast(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
