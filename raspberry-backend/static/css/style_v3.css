@@ -10249,6 +10249,6 @@ body {
 }
 .br-red{border: 1px solid #ff0000;}
 
-.reading{font-size:3rem;min-width:10rem;display:inline-block;}
+.reading{font-size:2rem;min-width:8rem;display:inline-block;}
 
 #logo{ height:var(--top-height); }
