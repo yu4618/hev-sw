@@ -40,6 +40,7 @@
   --breakpoint-xl: 1200px;
   --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --top-height: 100px;
 }
 
 *,
@@ -4350,7 +4351,7 @@ input[type=button].btn-block {
   word-wrap: break-word;
   background-color: #fff;
   background-clip: border-box;
-  border: 1px solid rgba(255, 0, 0, 0.125);
+  border: 1px solid rgba(0, 0, 0, 0.125);
   border-radius: 0.25rem;
 }
 .card > hr {
@@ -7680,7 +7681,7 @@ button.bg-cern:focus {
 
 .pr-1,
 .px-1 {
-  padding-right: 0.25rem !important;
+  padding-right: 0.05rem !important;
 }
 
 .pb-1,
@@ -7690,7 +7691,7 @@ button.bg-cern:focus {
 
 .pl-1,
 .px-1 {
-  padding-left: 0.25rem !important;
+  padding-left: 0.05rem !important;
 }
 
 .p-2 {
@@ -10041,7 +10042,7 @@ body {
   justify-content: space-between;
   min-width: 0;
   flex-grow: 1;
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - var(--top-height));
   margin-left: -225px;
 }
 
@@ -10085,19 +10086,19 @@ body {
   z-index: 1039;
 }
 .sb-nav-fixed #layoutSidenav #layoutSidenav_nav {
-  width: 225px;
+  width: 100px;
   height: 100vh;
   z-index: 1038;
 }
 .sb-nav-fixed #layoutSidenav #layoutSidenav_nav .sb-sidenav {
-  padding-top: 56px;
+  padding-top: var(--top-height);
 }
 .sb-nav-fixed #layoutSidenav #layoutSidenav_nav .sb-sidenav .sb-sidenav-menu {
   overflow-y: auto;
 }
 .sb-nav-fixed #layoutSidenav #layoutSidenav_content {
-  padding-left: 225px;
-  top: 56px;
+  padding-left: 100px;
+  top: var(--top-height);
 }
 
 #layoutError {
@@ -10124,7 +10125,7 @@ body {
 
 .sb-topnav {
   padding-left: 0;
-  height: 56px;
+  height: var(--top-height);
   z-index: 1039;
 }
 .sb-topnav .navbar-brand {
@@ -10248,4 +10249,6 @@ body {
 }
 .br-red{border: 1px solid #ff0000;}
 
-.reading{font-size:3rem;}
+.reading{font-size:3rem;min-width:10rem;display:inline-block;}
+
+#logo{ height:var(--top-height); }
