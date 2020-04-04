@@ -13,7 +13,8 @@
     </head>
     <body class="sb-nav-fixed">
       <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
-            <a class="navbar-brand" href="index.html">High Energy Ventilator</a><!--<button class="btn btn-link btn-sm order-1 order-lg-0" id="sidebarToggle" href="#"><i class="fas fa-bars"></i></button> !-->
+            <a class="navbar-brand" href="">		  	    	<img src="{{ url_for('static', filename='img/cern-hev-logo.png') }}" id="logo">
+</a><!--<button class="btn btn-link btn-sm order-1 order-lg-0" id="sidebarToggle" href="#"><i class="fas fa-bars"></i></button> !-->
 
 	    <!--
             <form class="d-none d-md-inline-block form-inline ml-auto mr-0 mr-md-3 my-2 my-md-0">
@@ -24,7 +25,6 @@
 	    <!-- Navbar-->
             <ul class="navbar-nav ml-auto mr-0 mr-md-3 my-2 my-md-0">
               <li class="nav-item dropdown">
-		User Name, Age, Weight
                     <a class="nav-link dropdown-toggle" id="userDropdown" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
                         <a class="dropdown-item" href="#">Settings</a><a class="dropdown-item" href="#">Activity Log</a>
@@ -37,19 +37,17 @@
         <div id="layoutSidenav">
           <div id="layoutSidenav_nav">
                 <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
-		  	    	<img src="{{ url_for('static', filename='img/cern-hev-logo.png') }}" style="width:160px">
-
-                    <div class="sb-sidenav-menu">
+                  <div class="sb-sidenav-menu">
                       <div class="nav">
-			<a> <div class = "sb-nav-link-icon"><img src="../static/img/fan-solid.svg" style="width:60px;height:60px;"></img> Main </div></a>
-			<a> <div class = "sb-nav-link-icon"><img src="../static/img/chart-area-solid.svg" style="width:60px;height:60px;"></img> Info </div></a>
-			<a> <div class = "sb-nav-link-icon"><img src="../static/img/sliders-h-solid.svg" style="width:60px;height:60px;"></img> Modes </div></a>
+			<a> <div class = "sb-nav-link-icon"><img src="../static/img/fan-solid.svg" style="width:100px;height:100px;"></img></div></a>
+			<a> <div class = "sb-nav-link-icon"><img src="../static/img/chart-area-solid.svg" style="width:100px;height:100px;"></img></div></a>
+			<a> <div class = "sb-nav-link-icon"><img src="../static/img/sliders-h-solid.svg" style="width:100px;height:100px;"></img></div></a>
                 </nav>
 		</div>
 
 
 
-            <div id="layoutSidenav_content">
+            <div id="layoutSidenav_content" class="mx-0 my-0 mr-0">
                 <main>
                   <div class="container-fluid">
                     <!--<h1 class="mt-4">Info</h1> !-->
@@ -59,15 +57,15 @@
                           <div class="col-md-12">
                             <div class="card mb-6">
                               <div class="card-header small "><i class="fas fa-chart-area mr-1"></i>Variable number 1</div>
-                              <div class="card-body"><canvas id="variable1" width="200%" height="30"></canvas></div>
+                              <div class="card-body px-0 py-0"><canvas id="variable1" width="200%" height="40"></canvas></div>
                             </div>
                           </div>
 			</div>
 			<div class = "row">
                           <div class="col-md-12">
-                            <div class="card mb-6">
+                            <div class="card mb-6 px-0 py-0">
                               <div class="card-header small"><i class="fas fa-chart-bar mr-1"></i>Variable number 2</div>
-                              <div class="card-body"><canvas id="variable2" width="200%" height="30"></canvas></div>
+                              <div class="card-body px-0 py-0"><canvas id="variable2" width="200%" height="40"></canvas></div>
                             </div>
                           </div>
                         </div>
@@ -83,7 +81,7 @@
 		      <div class = "col-md-5 py-0 px-0  mr-0">
 			
                         <div class="row">
-			  <div class="col-xl-5b px-0 py-0">
+			  <div class="col-xl-5b px-1 py-0">
 			    <div class="card bg-primary text-white">
                               <div class="card-header d-flex align-items-center justify-content-between">
                                 <a class="small text-white stretched-link" href="#">Temperature</a>
@@ -91,7 +89,7 @@
                               <div class="card-body"><span class = "reading" id="temperature"></span> &#8451;</div>
                             </div>
                           </div>
-                          <div class="col-xl-5b px-0 py-0">
+                          <div class="col-xl-5b px-1 py-0">
                             <div class="card bg-primary text-white mb-4">
                               <div class="card-header d-flex align-items-center justify-content-between">
 				<a class="small text-white stretched-link" href="#">Pressure</a>
@@ -102,7 +100,7 @@
 			</div>
 
                         <div class="row">
-			  <div class="col-xl-5b col-md-8 px-0 py-0">
+			  <div class="col-xl-5b col-md-8 px-1 py-0">
 			    <div class="card bg-primary text-white mb-4">
                               <div class="card-header d-flex align-items-center justify-content-between">
                                 <a class="small text-white stretched-link" href="#">variable3</a>
@@ -110,7 +108,7 @@
                               <div class="card-body"><span class = "reading" id = "variable3"></span> &#8451;</div>
                             </div>
                           </div>
-                          <div class="col-xl-5b px-0 py-0 col-md-8">
+                          <div class="col-xl-5b px-1 py-0 col-md-8">
                             <div class="card bg-primary text-white mb-4">
                               <div class="card-header d-flex align-items-center justify-content-between">
 				<a class="small text-white stretched-link" href="#">variable4</a>
@@ -121,7 +119,7 @@
 			</div>
 
                         <div class="row">
-			  <div class="col-xl-5b col-md-8 px-0 py-0">
+			  <div class="col-xl-5b col-md-8 px-1 py-0">
 			    <div class="card bg-primary text-white mb-4">
                               <div class="card-header d-flex align-items-center justify-content-between">
                                 <a class="small text-white stretched-link" href="#">variable5</a>
@@ -129,7 +127,7 @@
                               <div class="card-body"><span class = "reading" id = "variable5">00</span> &#8451;</div>
                             </div>
                           </div>
-                          <div class="col-xl-5b px-0 py-0 col-md-8">
+                          <div class="col-xl-5b px-1 py-0 col-md-8">
                             <div class="card bg-primary text-white mb-4">
                               <div class="card-header d-flex align-items-center justify-content-between">
 				<a class="small text-white stretched-link" href="#">variable6</a>
