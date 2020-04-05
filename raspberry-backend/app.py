@@ -25,7 +25,7 @@ def hello_worlds():
 @WEBAPP.route('/live-data', methods=['GET'])
 def live_data():
     """
-    Query the sqlite3 table
+    Query the sqlite3 table for variables
     Output in json format
     """
 
@@ -65,6 +65,30 @@ def live_data():
 
     #return Response(json.dumps(data),  mimetype='application/json')
     return response
+
+@WEBAPP.route('/live-alarms', methods=['GET'])
+def live_alarms():
+    """
+    Query the sqlite3 table for alarms
+    Output in json format
+    """
+
+    data = {'alarms' : None}
+
+    sqlite_file = 'database/HEC_monitoringDB.sqlite'
+    with sqlite3.connect(sqlite_file) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT alarms "
+        "FROM hec_monitor ORDER BY ROWID DESC LIMIT 1")
+
+        fetched = cursor.fetchone()
+        data['alarms'] = fetched[0]
+
+    response = make_response(json.dumps(data).encode('utf-8') )
+    response.content_type = 'application/json'
+
+    return response
+
 
 
 if __name__ == '__main__':

@@ -8,4 +8,4 @@ List of missing features and/or improvements
 
 -- UI: sideabar reduce and show only icons; test on 16 inch display; insert alarms (flashing lights and text) 
 
-
+-- Check if alarms are just one string in the list or multiple entries in a list 

@@ -43,6 +43,7 @@ def database_setup():
         conn = sqlite3.connect(SQLITE_FILE)
         conn.execute('''CREATE TABLE IF NOT EXISTS ''' + TABLE_NAME + ''' (
            created_at     INTEGER        NOT NULL,
+           alarms         STRING         NOT NULL,
            temperature    FLOAT           NOT NULL,
            pressure       FLOAT           NOT NULL,
            variable3    FLOAT           NOT NULL,
@@ -65,6 +66,7 @@ def monitoring(source_address):
 
     # Instantiating the client
     hevclient = HEVClient()
+    hevclient.set_thresholds([12.3, 45.6, 78.9])
 
     epoch = datetime(1970, 1, 1)
 
@@ -78,9 +80,11 @@ def monitoring(source_address):
             
             if hevclient.get_values() != []:
                 data_receiver = hevclient.get_values()
+                data_alarms = hevclient.get_alarms()
 
                 random_data = {
                     'time' : timestamp,
+                    'alarms' : data_alarms[0],
                     'temperature': data_receiver[0],
                     'pressure': data_receiver[1],
                     'variable3': data_receiver[2],
@@ -93,9 +97,7 @@ def monitoring(source_address):
                 try:
                     cursor.execute(
                             'INSERT INTO {tn} VALUES '
-                            '(:time, :temperature, :pressure, :variable3, :variable4, :variable5, :variable6)'
-                            .format(tn=TABLE_NAME),
-                            random_data
+                            '(:time, :alarms, :temperature, :pressure, :variable3, :variable4, :variable5, :variable6)'.format(tn=TABLE_NAME), random_data
                     )
                     conn.commit()
                 except sqlite3.Error as err:
