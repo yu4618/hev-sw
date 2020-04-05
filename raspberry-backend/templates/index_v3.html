@@ -12,7 +12,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/js/all.min.js" crossorigin="anonymous"></script>
     </head>
     <body class="sb-nav-fixed">
-      <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+      <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark px-0 py-0">
             <a class="navbar-brand" href="">		  	    	<img src="{{ url_for('static', filename='img/cern-hev-logo.png') }}" id="logo">
             <a class="navbar-nav  ml-auto mr-0 mr-md-3 my-2 my-md-0" style="color:#FF0000" id='alarms'> Alarms  </a>  
 </a><!--<button class="btn btn-link btn-sm order-1 order-lg-0" id="sidebarToggle" href="#"><i class="fas fa-bars"></i></button> !-->
@@ -36,13 +36,23 @@
             </ul>
         </nav>
         <div id="layoutSidenav">
-          <div id="layoutSidenav_nav">
-                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+          <div id="layoutSidenav_nav" class="py-1">
+                <nav class="sb-sidenav accordion sb-sidenav-dark px-1" id="sidenavAccordion">
                   <div class="sb-sidenav-menu">
                       <div class="nav">
-			<a> <div class = "sb-nav-link-icon"><img src="../static/img/fan-solid.svg" style="width:100px;height:100px;"></img></div></a>
-			<a> <div class = "sb-nav-link-icon"><img src="../static/img/chart-area-solid.svg" style="width:100px;height:100px;"></img></div></a>
-			<a> <div class = "sb-nav-link-icon"><img src="../static/img/sliders-h-solid.svg" style="width:100px;height:100px;"></img></div></a>
+			<a> <div class = "sb-nav-link-icon">
+<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="fan" class="fa-fan fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path class="path-icon" fill="white" d="M352.57 128c-28.09 0-54.09 4.52-77.06 12.86l12.41-123.11C289 7.31 279.81-1.18 269.33.13 189.63 10.13 128 77.64 128 159.43c0 28.09 4.52 54.09 12.86 77.06L17.75 224.08C7.31 223-1.18 232.19.13 242.67c10 79.7 77.51 141.33 159.3 141.33 28.09 0 54.09-4.52 77.06-12.86l-12.41 123.11c-1.05 10.43 8.11 18.93 18.59 17.62 79.7-10 141.33-77.51 141.33-159.3 0-28.09-4.52-54.09-12.86-77.06l123.11 12.41c10.44 1.05 18.93-8.11 17.62-18.59-10-79.7-77.51-141.33-159.3-141.33zM256 288a32 32 0 1 1 32-32 32 32 0 0 1-32 32z"></path></svg>
+
+			</div></a>
+			<a> <div class = "sb-nav-link-icon">
+<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chart-area" class="fa-chart-area fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path class="path-icon" fill="white" d="M500 384c6.6 0 12 5.4 12 12v40c0 6.6-5.4 12-12 12H12c-6.6 0-12-5.4-12-12V76c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12v308h436zM372.7 159.5L288 216l-85.3-113.7c-5.1-6.8-15.5-6.3-19.9 1L96 248v104h384l-89.9-187.8c-3.2-6.5-11.4-8.7-17.4-4.7z"></path></svg>
+			</div></a>
+			<a> <div class = "sb-nav-link-icon">
+<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="sliders-h" class="fa-sliders-h fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path clas="path-icon" fill="white" d="M496 384H160v-16c0-8.8-7.2-16-16-16h-32c-8.8 0-16 7.2-16 16v16H16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h80v16c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16v-16h336c8.8 0 16-7.2 16-16v-32c0-8.8-7.2-16-16-16zm0-160h-80v-16c0-8.8-7.2-16-16-16h-32c-8.8 0-16 7.2-16 16v16H16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h336v16c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16v-16h80c8.8 0 16-7.2 16-16v-32c0-8.8-7.2-16-16-16zm0-160H288V48c0-8.8-7.2-16-16-16h-32c-8.8 0-16 7.2-16 16v16H16C7.2 64 0 71.2 0 80v32c0 8.8 7.2 16 16 16h208v16c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16v-16h208c8.8 0 16-7.2 16-16V80c0-8.8-7.2-16-16-16z"></path></svg>
+</div></a>
+
+
+			
                 </nav>
 		</div>
 
@@ -57,24 +67,24 @@
                         <div class="row">
                           <div class="col-md-12">
                             <div class="card mb-6">
-                              <div class="card-header small "><i class="fas fa-chart-area mr-1"></i>Variable number 1</div>
-                              <div class="card-body px-0 py-0"><canvas id="variable1" width="200%" height="40"></canvas></div>
+                              <div class="card-chart-header small ">Variable number 1</div>
+                              <div class="card-body px-0 py-0"><canvas id="variable1" width="200%" height="50"></canvas></div>
                             </div>
                           </div>
 			</div>
 			<div class = "row">
                           <div class="col-md-12">
                             <div class="card mb-6 px-0 py-0">
-                              <div class="card-header small"><i class="fas fa-chart-bar mr-1"></i>Variable number 2</div>
-                              <div class="card-body px-0 py-0"><canvas id="variable2" width="200%" height="40"></canvas></div>
+                              <div class="card-chart-header small"></i>Variable number 2</div>
+                              <div class="card-body px-0 py-0"><canvas id="variable2" width="200%" height="50"></canvas></div>
                             </div>
                           </div>
                         </div>
 			<div class = "row">
                           <div class="col-md-12">
-                            <div class="card mb-6">
-                              <div class="card-header small "><i class="fas fa-chart-bar mr-1"></i>Bar Chart Example</div>
-                              <div class="card-body"><canvas id="myBarChart" width="100%" height="30"></canvas></div>
+                            <div class="card mb-6 px-0 py-0">
+                              <div class="card-chart-header small ">Variable number 3</div>
+                              <div class="card-body px-0 py-0"><canvas id="chart_variable3" width="200%" height="50"></canvas></div>
                             </div>
                           </div>
 			</div>
@@ -82,58 +92,60 @@
 		      <div class = "col-md-5 py-0 px-0  mr-0">
 			
                         <div class="row">
-			  <div class="col-xl-5b px-1 py-0">
-			    <div class="card bg-primary text-white">
+			  
+			  <div class="col-xl-5b px-1 py-0 mr-0">
+			    <div class="card bg-primary text-white mb-2">
                               <div class="card-header d-flex align-items-center justify-content-between">
                                 <a class="small text-white stretched-link" href="#">Temperature</a>
                               </div>
-                              <div class="card-body"><span class = "reading" id="temperature"></span> &#8451;</div>
+                              <div class="card-body"><span class = "reading" id="temperature">000.00</span> &#8451;</div>
                             </div>
                           </div>
-                          <div class="col-xl-5b px-1 py-0">
-                            <div class="card bg-primary text-white mb-4">
+		
+                          <div class="col-xl-5b px-1 py-0 mr-0">
+                            <div class="card bg-primary text-white mb-2">
                               <div class="card-header d-flex align-items-center justify-content-between">
 				<a class="small text-white stretched-link" href="#">Pressure</a>
                               </div>
-                             <div class="card-body"><span class = "reading" id = "pressure"></span> Pa</div>
+                             <div class="card-body"><span class = "reading" id = "pressure">000.00</span> Pa</div>
                             </div>
 			  </div>
 			</div>
 
                         <div class="row">
 			  <div class="col-xl-5b col-md-8 px-1 py-0">
-			    <div class="card bg-primary text-white mb-4">
+			    <div class="card bg-primary text-white mb-2">
                               <div class="card-header d-flex align-items-center justify-content-between">
                                 <a class="small text-white stretched-link" href="#">variable3</a>
                               </div>
-                              <div class="card-body"><span class = "reading" id = "variable3"></span> &#8451;</div>
+                              <div class="card-body"><span class = "reading" id = "variable3">000.00</span> &#8451;</div>
                             </div>
                           </div>
                           <div class="col-xl-5b px-1 py-0 col-md-8">
-                            <div class="card bg-primary text-white mb-4">
+                            <div class="card bg-primary text-white mb-2">
                               <div class="card-header d-flex align-items-center justify-content-between">
 				<a class="small text-white stretched-link" href="#">variable4</a>
                               </div>
-                             <div class="card-body"><span class = "reading" id = "variable4"></span> Pa</div>
+                             <div class="card-body"><span class = "reading" id = "variable4">000.00</span> Pa</div>
                             </div>
 			  </div>
 			</div>
 
                         <div class="row">
 			  <div class="col-xl-5b col-md-8 px-1 py-0">
-			    <div class="card bg-primary text-white mb-4">
+			    <div class="card bg-primary text-white mb-2">
                               <div class="card-header d-flex align-items-center justify-content-between">
                                 <a class="small text-white stretched-link" href="#">variable5</a>
                               </div>
-                              <div class="card-body"><span class = "reading" id = "variable5">00</span> &#8451;</div>
+                              <div class="card-body"><span class = "reading" id = "variable5">000.00</span> &#8451;</div>
                             </div>
                           </div>
                           <div class="col-xl-5b px-1 py-0 col-md-8">
-                            <div class="card bg-primary text-white mb-4">
+                            <div class="card bg-primary text-white mb-2">
                               <div class="card-header d-flex align-items-center justify-content-between">
 				<a class="small text-white stretched-link" href="#">variable6</a>
                               </div>
-                             <div class="card-body"><span class = "reading" id = "variable6">00</span> Pa</div>
+                             <div class="card-body"><span class = "reading" id = "variable6">000.00</span> Pa</div>
                             </div>
 			  </div>
 			</div>
