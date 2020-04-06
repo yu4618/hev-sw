@@ -24,13 +24,15 @@ public:
 private:
     DataQueue<commsFormat>* getQueue(uint8_t address);
 
-    void sendPacket   (DataQueue<commsFormat>* queue);
+    void sendQueue   (DataQueue<commsFormat>* queue);
     void resendPacket (DataQueue<commsFormat>* queue);
     void receivePacket(DataQueue<commsFormat>* queue);
     void finishPacket (DataQueue<commsFormat>* queue);
 
     bool encoder(uint8_t* data, uint8_t dataSize);
     bool decoder(uint8_t* data, uint8_t dataStart, uint8_t dataStop);
+
+    void sendPacket(commsFormat* packet);
 
 private:
     DataQueue<commsALARM> queueAlarm_;

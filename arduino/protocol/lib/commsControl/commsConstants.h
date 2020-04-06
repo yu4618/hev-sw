@@ -20,7 +20,7 @@
 #define PACKET_ALARM 0xC0
 #define PACKET_CMD   0x80
 #define PACKET_DATA  0x40
-#define PACKET_SET   0x20
+#define PACKET_SET   0x20 //set vs get
 
 // TODO: make sensible
 #define PRESSURE_PEEP_LOW  0x01

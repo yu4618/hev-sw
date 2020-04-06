@@ -30,11 +30,11 @@ void commsControl::beginSerial() {
 // TODO: needs switch on data type with global timeouts on data pushing
 void commsControl::sender() {
     if (millis() > lastTransTime_ + 5 ) {
-        sendPacket(reinterpret_cast<DataQueue<commsFormat>*>(&queueAlarm_));
+        sendQueue(reinterpret_cast<DataQueue<commsFormat>*>(&queueAlarm_));
     }
 
     if (millis() > lastTransTime_ + 5000 ) {
-        sendPacket(reinterpret_cast<DataQueue<commsFormat>*>(&queueData_));
+        sendQueue(reinterpret_cast<DataQueue<commsFormat>*>(&queueData_));
     }
 }
 
@@ -87,6 +87,7 @@ void commsControl::receiver() {
                                     default:
                                         // received DATA
                                         receivePacket(tmpQueue);
+                                        sendPacket(&commsACK(address));
                                         break;
                                 }
                             }
@@ -184,21 +185,24 @@ bool commsControl::decoder(uint8_t* data, uint8_t dataStart, uint8_t dataStop) {
 }
 
 // sending anything of commsDATA format
-void commsControl::sendPacket(DataQueue<commsFormat>* queue) {
+void commsControl::sendQueue(DataQueue<commsFormat>* queue) {
     // if have data to send
     if (!queue->isEmpty()) {
-    // reset sending counter
-    lastTransTime_ = millis();
+        // reset sending counter
+        lastTransTime_ = millis();
 
+        // TODO define transmission counter
+        // queue->front().setCounter(someValue)
+
+        sendPacket(&(queue->front()));
+    }
+}
+
+void commsControl::sendPacket(commsFormat *packet) {
     // if encoded and able to write data
-    if (encoder(queue->front().getData(), queue->front().getSize()) ) {
+    if (encoder(packet->getData(), packet->getSize()) ) {
         if (Serial.availableForWrite() >= commsSendSize_) {
-
-                // TODO define transmission counter
-                // queue->front().setCounter(someValue)
-
-                Serial.write(commsSend_, commsSendSize_);
-            }
+            Serial.write(commsSend_, commsSendSize_);
         }
     }
 }
@@ -218,7 +222,10 @@ void commsControl::receivePacket(DataQueue<commsFormat>* queue) {
 
 // if FCS is ok, remove from queue
 void commsControl::finishPacket(DataQueue<commsFormat>* queue) {
-    queue->dequeue();
+    // TODO check if transmission counter is aligned with transfer to remove
+    if (!queue->isEmpty()) {
+        queue->dequeue();
+    }
 }
 
 // get link to queue according to packet format
