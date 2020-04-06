@@ -5,6 +5,12 @@
 
 import libscrc
 
+def commsFromBytes(byteArray):
+    comms = commsFormat()
+    comms.copyBytes(byteArray)
+    
+    return comms
+
 # basic format based on HDLC
 class commsFormat:
     def __init__(self, infoSize = 0, address = 0x00, control = [0x00, 0x00]):
@@ -44,8 +50,8 @@ class commsFormat:
             
     def compareCrc(self):
         self.generateCrc(False)
-        
-        return (self.crc_ == self.fcs_)
+        fcs = self.getData()[self.getFcs():self.getFcs()+2]
+        return self.crc_ in fcs
     
     def setInformation(self, value, size = 2):
         # convert provided value
@@ -54,9 +60,12 @@ class commsFormat:
     def getData(self):
         return self.data_
 
-    def setData(self, data):
-        self.infoSize_ = len(data)
-        self.data_     = data.to_bytes(self.infoSize_, byteorder='little')
+    def copyData(self, dataArray):
+        self.copyBytes(dataArray.to_bytes(self.infoSize_, byteorder='little'))
+        
+    def copyBytes(self, bytesArray):
+        self.infoSize_ = 7 - len(bytesArray)
+        self.data_     = bytesArray
         
 # DATA specific formating
 class commsDATA(commsFormat):
