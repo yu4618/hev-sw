@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#define CONST_MAX_SIZE_QUEUE 1
+#define CONST_MAX_SIZE_QUEUE 16
 #define CONST_MAX_SIZE_PACKET 64
 #define CONST_MAX_SIZE_BUFFER 128
 #define CONST_MIN_SIZE_PACKET 7
