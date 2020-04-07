@@ -14,14 +14,15 @@ import logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 import asyncio
+import threading
 import serial_asyncio
 
 # communication class that governs talking between devices
-class commsControl(asyncio.Protocol):
-    def __init__(self, queueSize = 16):
-        # takes care of all serial port initializations
-        super().__init__()
-        self.transport_ = None
+class commsControl():
+    def __init__(self, port, baudrate = 115200, queueSize = 16):
+        
+        self.serial_ = None
+        self.openSerial(port, baudrate)
 
         # queues are FIFO ring-buffers of the defined size
         self.alarms_   = deque(maxlen = queueSize)
@@ -33,74 +34,112 @@ class commsControl(asyncio.Protocol):
         self.foundStart_ = False
         self.timeLastTransmission_ = int(round(time.time() * 1000))
         
-    # virtual function from asyncio.Protocol
-    def connection_made(self, transport):
-        self.transport_ = transport
-        logging.info('port opened')
-        self.transport_.serial.rts = False # no idea what this is, copy-pasted
-     
-    # virtual function from asyncio.Protocol, reads from serial port, "random" number of bytes
-    def data_received(self, data):
-        self.receiver(data)
-     
-    # virtual function from asyncio.Protocol
-    def connection_lost(self, exc):
-        logging.info('port closed')
-        self.transport_.loop.stop()
-     
-    # virtual function from asyncio.Protocol
-    def pause_writing(self):
-        logging.info('pause writing')
-        logging.debug(self.transport_.get_write_buffer_size())
+        self.lock_ = threading.Lock()
+        self.receiving_ = True
+        receivingWorker = threading.Thread(target=self.receiver, daemon=True)
+        receivingWorker.start()
+        
+        self.sending_ = True
+        receivingWorker = threading.Thread(target=self.sender, daemon=True)
+        receivingWorker.start()
     
-    # virtual function from asyncio.Protocol
-    def resume_writing(self):
-        logging.debug(self.transport_.get_write_buffer_size())
-        logging.info('resume writing')
+    def openSerial(self, port, baudrate = 115200, timeout = 2):
+        if port is not None:
+            self.serial_ = serial.Serial(port = port, baudrate=baudrate, timeout = timeout)
+        else:
+            try:
+                self.serial_.close()
+            except:
+                print("warning: device not open")
+            self.serial_ = None
         
     # have yet to figure out how to call this automatically
     def sender(self):
-        self.checkQueue(self.alarms_  ,  10)
-        self.checkQueue(self.commands_,  50)
-        self.checkQueue(self.data_    , 100)
+        while self.sending_:
+            if not self.serial_ is None:
+                if not self.serial_.in_waiting > 0:
+                    self.checkQueue(self.alarms_  ,  10)
+                    self.checkQueue(self.commands_,  50)
+                    self.checkQueue(self.data_    , 6000)
     
-    def checkQueue(queue, timeout):
-        if len(queue) > 0:
-            if int(round(time.time() * 1000)) > (self.timeLastTransmission_ + timeout):
-                self.send(queue[0])
+    def receiver(self):
+        while self.receiving_:
+            if not self.serial_ is None:
+                if self.serial_.in_waiting > 0:
+                    with self.lock_:
+                        logging.debug("Receiving data...")
+                        data = self.serial_.read(self.serial_.in_waiting)
+                        self.packetReceived(data)
 
-    def receiver(self, data):
+    def checkQueue(self, queue, timeout):
+        if len(queue) > 0:
+            currentTime = int(round(time.time() * 1000))
+            if currentTime > (self.timeLastTransmission_ + timeout):
+                with self.lock_:
+                    self.timeLastTransmission_ = currentTime
+                    self.sendPacket(queue[0])
+                    
+    def getQueue(self, packetFlag):
+        if   packetFlag == 0xC0:
+            return self.alarms_
+        elif packetFlag == 0x80:
+            return self.commands_
+        elif packetFlag == 0x40:
+            return self.data_
+        else:
+            return None
+
+    def packetReceived(self, data):
         for byte in data:
             byte = bytes([byte])
             # TODO: this could be written in more pythonic way
             # force read byte by byte
             self.received_.append(byte)
-            logging.debug(byte)
             if not self.foundStart_ and byte == bytes([0x7E]):
                 self.foundStart_    = True
                 self.receivedStart_ = len(self.received_)
             elif byte == bytes([0x7E]) :
                 decoded = self.decoder(self.received_, self.receivedStart_)
                 if decoded is not None:
-                    logging.debug("Preparing ACK")
-                    self.send(commsFormat.commsACK(address = decoded[1]))
-                else:
-                    logging.debug("Preparing NACK")
-                    self.send(commsFormat.commsNACK(address = decoded[1]))
+                    logging.debug(decoded)
+                    tmpComms = commsFormat.commsFromBytes(decoded)
+                    if tmpComms.compareCrc():
+                        ctrlFlag   = decoded[3] & 0x0F
+                        packetFlag = decoded[1] & 0xC0
+                        tmpQueue   = self.getQueue(packetFlag)
+                        if ctrlFlag == 0x05:
+                            logging.debug("Received NACK")
+                            # received NACK
+                        elif ctrlFlag == 0x01:
+                            logging.debug("Received ACK")
+                            # received ACK
+                            self.finishPacket(tmpQueue)
+                        else:
+                            # for now just confirm data
+                            logging.debug("Preparing ACK")
+                            self.sendPacket(commsFormat.commsACK(address = decoded[1]))
                 
                 self.received_.clear()
                 
                 self.foundStart_    = False
-                self.receivedStart_ = -1                
+                self.receivedStart_ = -1        
         
     def registerData(self, value):
         tmpData = commsFormat.commsDATA()
         tmpData.setInformation(value)
         self.data_.append(tmpData)
         
-    def send(self, comms):
+    def sendPacket(self, comms):
         logging.debug("Sending data...")
-        self.transport_.write(self.encoder(comms.getData()))
+        logging.debug(self.encoder(comms.getData()))
+        self.serial_.write(self.encoder(comms.getData()))
+    
+    def finishPacket(self, queue):
+        try:
+            if len(queue) > 0:
+                queue.pop()
+        except:
+            logging.debug("Queue is probably empty")
 
     # escape any 0x7D or 0x7E with 0x7D and swap bit 5
     def escapeByte(self, byte):
@@ -131,6 +170,12 @@ class commsControl(asyncio.Protocol):
             return result
         except:
             return None
+        
+    async def communication(self):
+        loop = asyncio.get_running_loop()
+        sth = await loop.run_in_executor(None, self.receiver())
+        print(sth)
+#         await loop.run_in_executor(None, self.sender())
 
 if __name__ == "__main__" :
     # get port number for arduino, mostly for debugging
@@ -141,8 +186,7 @@ if __name__ == "__main__" :
         except:
             pass
 
-    loop = asyncio.get_event_loop()
-    connection = serial_asyncio.create_serial_connection(loop, commsControl, port, baudrate=115200)
-    loop.run_until_complete(connection)
-    loop.run_forever()
-    loop.close()
+    commsCtrl = commsControl(port = port)
+    commsCtrl.registerData(3)
+    while True:
+        pass
