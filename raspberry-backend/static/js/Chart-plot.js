@@ -85,7 +85,8 @@ $(document).ready(function() {
                 data: [],
                 label: "Var1",
                 borderColor: "#3e95cd",
-                fill: false
+                fill: false,
+		lineTension: 0
               } 
             ]
           },
@@ -95,13 +96,17 @@ $(document).ready(function() {
               text: 'Variable 1'
             },
             scales: {
-            xAxes: [{
-                type: 'time',
-                time: {
-                    unit: 'second',
-                    displayFormat: 'second'
-                }
-            }]
+		xAxes: [{
+                    type: 'time',
+                    time: {
+			unit: 'second',
+			displayFormat: 'second'
+                    },
+		    ticks: {
+			maxTicksLimit: 5,
+			maxRotation: 0
+		    }
+		}]
 	    },
 		legend : {
 		    display: false}
@@ -123,7 +128,8 @@ $(document).ready(function() {
                 data: [],
                 label: "Var2",
                 borderColor: "#3e95cd",
-                fill: false
+                fill: false,
+		lineTension: 0
               } 
             ]
           },
@@ -138,7 +144,11 @@ $(document).ready(function() {
                 time: {
                     unit: 'second',
                     displayFormat: 'second'
-                }
+                },
+		ticks: {
+		    maxTicksLimit: 5,
+		    maxRotation: 0
+		}
             }]
             },
 	legend : {
@@ -152,12 +162,7 @@ $(document).ready(function() {
 		      bottom: 0
 
 		  }
-	      },
-	      xAxes : [{
-		  ticks : {
-		  maxTicksLimit: 5
-		  }
-	      }]
+	      }
 	  }
     });
     requestDataVar2();
@@ -173,7 +178,8 @@ $(document).ready(function() {
                 data: [],
                 label: "Var3",
                 borderColor: "#3e95cd",
-                fill: false
+                fill: false,
+		lineTension: 0
               } 
             ]
           },
@@ -188,7 +194,11 @@ $(document).ready(function() {
                 time: {
                     unit: 'second',
                     displayFormat: 'second'
-                }
+                },
+		ticks: {
+		    maxTicksLimit: 5,
+		    maxRotation: 0
+		}
             }]
             },
 	legend : {
@@ -202,12 +212,7 @@ $(document).ready(function() {
 		      bottom: 0
 
 		  }
-	      },
-	      xAxes : [{
-		  ticks : {
-		  maxTicksLimit: 5
-		  }
-	      }]
+	      }
 	  }
     });
     requestDataVar3();

@@ -17,10 +17,12 @@ WEBAPP = Flask(__name__)
 @WEBAPP.route('/')
 def hello_world():
     return render_template('index.html', result=live_data())
-
 @WEBAPP.route('/new')
 def hello_worlds():
     return render_template('index_v3.html', result=live_data())
+@WEBAPP.route('/settings')
+def settings():
+    return render_template('settings.html', result=live_data())
 
 @WEBAPP.route('/live-data', methods=['GET'])
 def live_data():
@@ -42,12 +44,12 @@ def live_data():
         
         fetched = cursor.fetchone()
         data['created_at'] = fetched[0]
-        data['temperature'] = round(fetched[1],3)
-        data['pressure'] = round(fetched[2],3)
-        data['variable3'] = round(fetched[3],3)
-        data['variable4'] = round(fetched[4],3)                
-        data['variable5'] = round(fetched[5],3)                
-        data['variable6'] = round(fetched[6],3)                
+        data['temperature'] = round(fetched[1],2)
+        data['pressure'] = round(fetched[2],2)
+        data['variable3'] = round(fetched[3],2)
+        data['variable4'] = round(fetched[4],2)                
+        data['variable5'] = round(fetched[5],2)                
+        data['variable6'] = round(fetched[6],2)                
 
 
     #json_string = json.dumps(data, ensure_ascii = False)
