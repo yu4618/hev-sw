@@ -27,8 +27,17 @@ void commsFormat::assignBytes(uint8_t* target, uint8_t* source, uint8_t size, bo
     }
 }
 
-void commsFormat::setCounter(uint8_t counter) {
-    *(getControl() + 2) |= (counter << 4);
+void commsFormat::setSequenceSend(uint8_t counter) {
+    // sequence sent valid only for info frames (not supervisory ACK/NACK)
+    if ((*getControl() & COMMS_CONTROL_TYPES) == 0) {
+        counter = (counter << 1) & 0xFE;
+        assignBytes(getControl() + 1, &counter, 1);
+    }
+}
+
+void commsFormat::setSequenceReceive(uint8_t counter) {
+    counter = (counter << 1) & 0xFE;
+    assignBytes(getControl()    , &counter, 1);
 }
 
 // compare calculated and received CRC value
@@ -61,6 +70,8 @@ void commsFormat::generateCrc(bool assign) {
 void commsFormat::setInformation(dataFormat* values) {
     // assign values to
     memcpy(getInformation(), &values->count, 2);
+
+    generateCrc();
 }
 
 void commsFormat::copyData(uint8_t* data, uint8_t dataSize) {
