@@ -1,6 +1,6 @@
-#include <Wire.h>    // I2C control
-//    #include <LiquidCrystal_I2C.h>   //LCD over I2C
 // Node MCU 32s
+#define BOARD "NODEMCU32S"
+#define HAS_O2
     // pwm pins
 const int pin_valve_air_in   = 3;
 const int pin_valve_o2_in    = 5;

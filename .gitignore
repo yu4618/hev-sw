@@ -1,1 +1,10 @@
 *~
+*/*/.vscode
+.vscode
+.travis.yml
+__pycache__
+.pio
+.pro.user
+*.elf
+*.hex
+*.code-workspace
