@@ -47,7 +47,7 @@ bool commsFormat::compareCrc() {
 // calculate CRC value
 void commsFormat::generateCrc(bool assign) {
     // calculate crc
-    crc_ = uCRC16Lib::calculate(reinterpret_cast<char*>(getAddress()), infoSize_ + 3);
+    crc_ = uCRC16Lib::calculate(reinterpret_cast<char*>(getAddress()), static_cast<uint16_t>(infoSize_ + 3));
 
     // assign crc to fcs
     if (assign) {

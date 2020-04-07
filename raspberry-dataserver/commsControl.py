@@ -60,7 +60,7 @@ class commsControl():
                 if not self.serial_.in_waiting > 0:
                     self.checkQueue(self.alarms_  ,  10)
                     self.checkQueue(self.commands_,  50)
-                    self.checkQueue(self.data_    , 6000)
+                    self.checkQueue(self.data_    , 500)
     
     def receiver(self):
         while self.receiving_:
@@ -118,7 +118,7 @@ class commsControl():
                             # for now just confirm data
                             logging.debug("Preparing ACK")
                             self.sendPacket(commsFormat.commsACK(address = decoded[1]))
-                
+                    
                 self.received_.clear()
                 
                 self.foundStart_    = False
@@ -188,5 +188,9 @@ if __name__ == "__main__" :
 
     commsCtrl = commsControl(port = port)
     commsCtrl.registerData(3)
+    cntr = 0
+    LEDs = [3,5,7]
     while True:
-        pass
+        time.sleep(2)
+        commsCtrl.registerData(LEDs[cntr%3])
+        cntr+=1

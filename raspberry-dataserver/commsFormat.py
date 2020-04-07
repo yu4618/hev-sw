@@ -18,10 +18,12 @@ class commsFormat:
         self.infoSize_ = infoSize
         self.crc_ = None
         
-        self.assignBytes(self.getStart()  , bytes([0x7E]))
-        self.assignBytes(self.getAddress(), bytes([address]))
-        self.assignBytes(self.getControl(), bytes(control))
-        self.assignBytes(self.getStop()   , bytes([0x7E]))
+        self.assignBytes(self.getStart()  , bytes([0x7E])   , calcCrc = False)
+        self.assignBytes(self.getAddress(), bytes([address]), calcCrc = False)
+        self.assignBytes(self.getControl(), bytes(control)  , calcCrc = False)
+        self.assignBytes(self.getStop()   , bytes([0x7E])   , calcCrc = False)
+        
+        self.generateCrc()
         
     def getStart(self):
         return 0
@@ -36,17 +38,17 @@ class commsFormat:
     def getStop(self):
         return 4 + self.infoSize_ + 2
     
-    def assignBytes(self, start, values, isCrc = False):
+    def assignBytes(self, start, values, calcCrc = True):
         for idx in range(len(values)):
             self.data_[start + idx] = values[idx]
-        if not isCrc:
+        if calcCrc:
             self.generateCrc()
         
     # generate checksum
     def generateCrc(self, assign = True):
         self.crc_ = libscrc.x25(bytes(self.data_[self.getAddress():self.getFcs()])).to_bytes(2, byteorder='little')
         if assign:
-            self.assignBytes(self.getFcs(), self.crc_, isCrc = True)
+            self.assignBytes(self.getFcs(), self.crc_, calcCrc = False)
             
     def compareCrc(self):
         self.generateCrc(False)
@@ -64,7 +66,7 @@ class commsFormat:
         self.copyBytes(dataArray.to_bytes(self.infoSize_, byteorder='little'))
         
     def copyBytes(self, bytesArray):
-        self.infoSize_ = 7 - len(bytesArray)
+        self.infoSize_ = len(bytesArray) - 7
         self.data_     = bytesArray
         
 # DATA specific formating
