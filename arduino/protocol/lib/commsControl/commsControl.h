@@ -5,7 +5,7 @@
 // author Peter Svihra <peter.svihra@cern.ch>
 
 #include <Arduino.h>
-#include "Queue.h"
+#include "RingBuf.h"
 
 #include "commsConstants.h"
 #include "commsFormat.h"
@@ -26,12 +26,12 @@ public:
     void receiver();
 
 private:
-    DataQueue<commsFormat *> *getQueue(uint8_t address);
+    RingBuf<commsFormat *,CONST_MAX_SIZE_QUEUE> *getQueue(uint8_t address);
 
-    void sendQueue    (DataQueue<commsFormat *> *queue);
-    void resendPacket (DataQueue<commsFormat *> *queue);
-    void receivePacket(DataQueue<commsFormat *> *queue);
-    void finishPacket (DataQueue<commsFormat *> *queue);
+    void sendQueue    (RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue);
+    void resendPacket (RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue);
+    void receivePacket(RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue);
+    void finishPacket (RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue);
 
     bool encoder(uint8_t* data, uint8_t dataSize);
     bool decoder(uint8_t* data, uint8_t dataStart, uint8_t dataStop);
@@ -45,9 +45,9 @@ private:
     commsFormat* commsAck_;
     commsFormat* commsNck_;
 
-    DataQueue<commsFormat*>* queueAlarm_;
-    DataQueue<commsFormat*>* queueData_ ;
-    DataQueue<commsFormat*>* queueCmd_  ;
+    RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queueAlarm_;
+    RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queueData_;
+    RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queueCmd_;
 
     commsFormat commsTmp_;
 

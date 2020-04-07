@@ -15,16 +15,17 @@ commsControl::commsControl(uint32_t baudrate) {
     memset(commsReceived_, 0, sizeof(commsReceived_));
     memset(commsSend_    , 0, sizeof(commsSend_    ));
 
-    queueAlarm_ = new DataQueue<commsFormat *>(CONST_MAX_SIZE_QUEUE);
-    queueData_  = new DataQueue<commsFormat *>(CONST_MAX_SIZE_QUEUE);
-    queueCmd_   = new DataQueue<commsFormat *>(CONST_MAX_SIZE_QUEUE);
+    queueAlarm_ = new RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE>();
+    queueData_  = new RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE>();
+    queueCmd_   = new RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE>();
 
     commsTmp_   = commsFormat(CONST_MAX_SIZE_PACKET - CONST_MIN_SIZE_PACKET );
 
     commsAck_ = commsFormat::generateACK();
     commsNck_ = commsFormat::generateNACK();
 
-    sequenceSend_ = 1;
+    sequenceSend_    = 0;
+    sequenceReceive_ = 0;
 }
 
 // WIP
@@ -88,7 +89,7 @@ void commsControl::receiver() {
 
                             // to decide what kind of packets received
                             uint8_t address  = commsReceived_[1];
-                            DataQueue<commsFormat *> *tmpQueue = getQueue(address);
+                            RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *tmpQueue = getQueue(address);
                             if (tmpQueue != nullptr) {
                                 // switch on received data to know what to do - received ACK/NACK or other
                                 switch(control[1] & COMMS_CONTROL_TYPES) {
@@ -149,7 +150,12 @@ void commsControl::registerData(dataType type, dataFormat *values) {
     }
 
     // add new entry to the queue
-    queueData_->enqueue(newValue);
+    if (queueData_->isFull()) {
+        commsFormat *tmpComms;
+        queueData_->pop(tmpComms);
+        delete tmpComms;
+    }
+    queueData_->push(newValue);
 }
 
 
@@ -203,15 +209,15 @@ bool commsControl::decoder(uint8_t* data, uint8_t dataStart, uint8_t dataStop) {
 }
 
 // sending anything of commsDATA format
-void commsControl::sendQueue(DataQueue<commsFormat *> *queue) {
+void commsControl::sendQueue(RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue) {
     // if have data to send
     if (!queue->isEmpty()) {
         // reset sending counter
         lastTransTime_ = millis();
 
-        queue->front()->setSequenceSend(sequenceSend_);
+        queue->operator [](0)->setSequenceSend(sequenceSend_);
 
-        sendPacket(queue->front());
+        sendPacket(queue->operator [](0));
     }
 }
 
@@ -226,31 +232,33 @@ void commsControl::sendPacket(commsFormat *packet) {
 
 // resending the packet, can lower the timeout since either NACK or wrong FCS already checked
 //WIP
-void commsControl::resendPacket(DataQueue<commsFormat *> *queue) {
+void commsControl::resendPacket(RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue) {
     ;
 }
 
 
 // receiving anything of commsFormat
 // WIP
-void commsControl::receivePacket(DataQueue<commsFormat *> *queue) {
+void commsControl::receivePacket(RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue) {
     ;
 }
 
 // if FCS is ok, remove from queue
-void commsControl::finishPacket(DataQueue<commsFormat *> *queue) {
+void commsControl::finishPacket(RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue) {
     if (!queue->isEmpty()) {
         // get the sequence send from first entry in the queue, add one as that should be return
         // 0x7F to deal with possible overflows (0 should follow after 127)
-        if (((queue->front()->getSequenceSend() + 1) & 0x7F) ==  sequenceReceive_) {
+        if (((queue->operator [](0)->getSequenceSend() + 1) & 0x7F) ==  sequenceReceive_) {
             sequenceSend_ = (sequenceSend_ + 1) % 128;
-            delete queue->dequeue();
+            commsFormat * tmpComms;
+            queue->pop(tmpComms);
+            delete tmpComms;
         }
     }
 }
 
 // get link to queue according to packet format
-DataQueue<commsFormat *> *commsControl::getQueue(uint8_t address) {
+RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *commsControl::getQueue(uint8_t address) {
     switch (address & PACKET_TYPE) {
         case PACKET_ALARM:
             return queueAlarm_;
