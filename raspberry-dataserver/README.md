@@ -158,6 +158,6 @@ for i in range(10):
 # Set mode
 print(hevclient.set_mode("CPAP"))
 
-# Set thresholds - not yet implemented
+# Set thresholds
 print(hevclient.set_thresholds([12.3, 45.6, 78.9]))
 ```
