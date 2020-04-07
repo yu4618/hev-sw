@@ -38,6 +38,36 @@ class commsFormat:
     def getStop(self):
         return 4 + self.infoSize_ + 2
     
+    def setAddress(self, adddress):
+        self.assignBytes(self.getAddress(), bytes([address]), 1)
+        
+    def setControl(self, control):
+        self.assignBytes(self.getControl(), bytes(control), 2)
+    
+    def setInformation(self, value, size = 2):
+        # convert provided value
+        self.assignBytes(self.getInformation(), value.to_bytes(size, byteorder='little'))
+        
+    def setSequenceSend(self, value):
+        # sequence sent valid only for info frames (not supervisory ACK/NACK)
+        if (self.data_[self.getControl() + 1] & 0x01) == 0:
+            value = (value << 1) & 0xFE
+            self.assignBytes(self.getControl() + 1, value.to_bytes(1, byteorder='little'), 1)
+
+    def setSequenceReceive(self, value):
+        value = (value << 1) & 0xFE
+        self.assignBytes(self.getControl()    , value.to_bytes(1, byteorder='little'), 1)
+        
+    def getSequenceSend(self):
+        # sequence sent valid only for info frames (not supervisory ACK/NACK)
+        if (self.data_[self.getControl() + 1] & 0x01) == 0:
+            return (self.data_[self.getControl() + 1] >> 1) & 0x7F
+        else:
+            return 0xFF
+        
+    def getSequenceReceive(self):
+        return (self.data_[self.getControl()] >> 1) & 0x7F
+        
     def assignBytes(self, start, values, calcCrc = True):
         for idx in range(len(values)):
             self.data_[start + idx] = values[idx]
@@ -55,9 +85,6 @@ class commsFormat:
         fcs = self.getData()[self.getFcs():self.getFcs()+2]
         return self.crc_ in fcs
     
-    def setInformation(self, value, size = 2):
-        # convert provided value
-        self.assignBytes(self.getInformation(), value.to_bytes(size, byteorder='little'))
     
     def getData(self):
         return self.data_

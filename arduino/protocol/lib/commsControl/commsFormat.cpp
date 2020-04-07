@@ -28,16 +28,29 @@ void commsFormat::assignBytes(uint8_t* target, uint8_t* source, uint8_t size, bo
 }
 
 void commsFormat::setSequenceSend(uint8_t counter) {
-    // sequence sent valid only for info frames (not supervisory ACK/NACK)
-    if ((*getControl() & COMMS_CONTROL_TYPES) == 0) {
+    // sequence send valid only for info frames (not supervisory ACK/NACK)
+    if ((*(getControl() + 1) & COMMS_CONTROL_SUPERVISORY) == 0) {
         counter = (counter << 1) & 0xFE;
         assignBytes(getControl() + 1, &counter, 1);
+    }
+}
+
+uint8_t commsFormat::getSequenceSend() {
+    // sequence send valid only for info frames (not supervisory ACK/NACK)
+    if ((*(getControl() + 1) & COMMS_CONTROL_SUPERVISORY) == 0) {
+        return (*(getControl() + 1) >> 1) & 0x7F;
+    } else {
+        return 0xFF;
     }
 }
 
 void commsFormat::setSequenceReceive(uint8_t counter) {
     counter = (counter << 1) & 0xFE;
     assignBytes(getControl()    , &counter, 1);
+}
+
+uint8_t commsFormat::getSequenceReceive() {
+    return (*(getControl()) >> 1) & 0x7F;
 }
 
 // compare calculated and received CRC value

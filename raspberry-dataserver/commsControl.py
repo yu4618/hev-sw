@@ -13,9 +13,7 @@ from collections import deque
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-import asyncio
 import threading
-import serial_asyncio
 
 # communication class that governs talking between devices
 class commsControl():
@@ -29,11 +27,18 @@ class commsControl():
         self.commands_ = deque(maxlen = queueSize)
         self.data_     = deque(maxlen = queueSize)
         
+        # TODO add received deque and callback / access to it
+        
         # needed to find packet frames
         self.received_ = []
         self.foundStart_ = False
         self.timeLastTransmission_ = int(round(time.time() * 1000))
         
+        # packet counter checker
+        self.sequenceSend_    = 0
+        self.sequenceReceive_ = 0
+        
+        # initialize of the multithreading
         self.lock_ = threading.Lock()
         self.receiving_ = True
         receivingWorker = threading.Thread(target=self.receiver, daemon=True)
@@ -43,6 +48,7 @@ class commsControl():
         receivingWorker = threading.Thread(target=self.sender, daemon=True)
         receivingWorker.start()
     
+    # open serial port
     def openSerial(self, port, baudrate = 115200, timeout = 2):
         if port is not None:
             self.serial_ = serial.Serial(port = port, baudrate=baudrate, timeout = timeout)
@@ -50,7 +56,7 @@ class commsControl():
             try:
                 self.serial_.close()
             except:
-                print("warning: device not open")
+                logging.warning("warning: device not open")
             self.serial_ = None
         
     # have yet to figure out how to call this automatically
@@ -58,9 +64,9 @@ class commsControl():
         while self.sending_:
             if not self.serial_ is None:
                 if not self.serial_.in_waiting > 0:
-                    self.checkQueue(self.alarms_  ,  10)
-                    self.checkQueue(self.commands_,  50)
-                    self.checkQueue(self.data_    , 500)
+                    self.sendQueue(self.alarms_  ,  10)
+                    self.sendQueue(self.commands_,  50)
+                    self.sendQueue(self.data_    , 200)
     
     def receiver(self):
         while self.receiving_:
@@ -71,12 +77,13 @@ class commsControl():
                         data = self.serial_.read(self.serial_.in_waiting)
                         self.packetReceived(data)
 
-    def checkQueue(self, queue, timeout):
+    def sendQueue(self, queue, timeout):
         if len(queue) > 0:
             currentTime = int(round(time.time() * 1000))
             if currentTime > (self.timeLastTransmission_ + timeout):
                 with self.lock_:
                     self.timeLastTransmission_ = currentTime
+                    queue[0].setSequenceSend(self.sequenceSend_)
                     self.sendPacket(queue[0])
                     
     def getQueue(self, packetFlag):
@@ -106,6 +113,9 @@ class commsControl():
                     if tmpComms.compareCrc():
                         ctrlFlag   = decoded[3] & 0x0F
                         packetFlag = decoded[1] & 0xC0
+                        
+                        self.sequenceReceive_ = (decoded[2] >> 1) & 0x7F
+                        
                         tmpQueue   = self.getQueue(packetFlag)
                         if ctrlFlag == 0x05:
                             logging.debug("Received NACK")
@@ -117,7 +127,9 @@ class commsControl():
                         else:
                             # for now just confirm data
                             logging.debug("Preparing ACK")
-                            self.sendPacket(commsFormat.commsACK(address = decoded[1]))
+                            commsResponse = commsFormat.commsACK(address = decoded[1])
+                            commsResponse.setSequenceReceive((decoded[3] >> 1) + 1)
+                            self.sendPacket(commsResponse)
                     
                 self.received_.clear()
                 
@@ -137,7 +149,10 @@ class commsControl():
     def finishPacket(self, queue):
         try:
             if len(queue) > 0:
-                queue.pop()
+                # 0x7F to deal with possible overflows (0 should follow after 127)
+                if ((queue[0].getSequenceSend() + 1) & 0x7F) == self.sequenceReceive_:
+                    self.sequenceSend_ = (self.sequenceSend_ + 1) % 128
+                    queue.popleft()
         except:
             logging.debug("Queue is probably empty")
 
@@ -171,12 +186,6 @@ class commsControl():
         except:
             return None
         
-    async def communication(self):
-        loop = asyncio.get_running_loop()
-        sth = await loop.run_in_executor(None, self.receiver())
-        print(sth)
-#         await loop.run_in_executor(None, self.sender())
-
 if __name__ == "__main__" :
     # get port number for arduino, mostly for debugging
     for port in list_ports.comports():
@@ -187,10 +196,9 @@ if __name__ == "__main__" :
             pass
 
     commsCtrl = commsControl(port = port)
-    commsCtrl.registerData(3)
-    cntr = 0
     LEDs = [3,5,7]
     while True:
-        time.sleep(2)
-        commsCtrl.registerData(LEDs[cntr%3])
-        cntr+=1
+        pass
+#         for led in LEDs:
+#             commsCtrl.registerData(led)
+#         time.sleep(5)

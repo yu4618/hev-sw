@@ -23,6 +23,8 @@ commsControl::commsControl(uint32_t baudrate) {
 
     commsAck_ = commsFormat::generateACK();
     commsNck_ = commsFormat::generateNACK();
+
+    sequenceSend_ = 1;
 }
 
 // WIP
@@ -37,11 +39,15 @@ void commsControl::beginSerial() {
 // main function to always call and try and send data
 // TODO: needs switch on data type with global timeouts on data pushing
 void commsControl::sender() {
-    if (millis() > lastTransTime_ + 5 ) {
+    if (millis() > lastTransTime_ + CONST_TIMEOUT_ALARM ) {
         sendQueue(queueAlarm_);
     }
 
-    if (millis() > lastTransTime_ + 5000 ) {
+    if (millis() > lastTransTime_ + CONST_TIMEOUT_CMD ) {
+        sendQueue(queueCmd_);
+    }
+
+    if (millis() > lastTransTime_ + CONST_TIMEOUT_DATA ) {
         sendQueue(queueData_);
     }
 }
@@ -74,15 +80,18 @@ void commsControl::receiver() {
                         // if managed to decode and compare CRC
                         if (decoder(lastTrans_, startTransIndex_, lastTransIndex_)) {
 
+                            // FIXME really need to move commsReceived_ to be commsFormat type - lot of control, address operations
                             // to decide ACK/NACK/other
-                            uint8_t control = commsReceived_[3];
+                            uint8_t control[2];
+                            memcpy(control, commsReceived_ + 2, 2);
+                            sequenceReceive_ = (control[0] >> 1) & 0x7F;
 
                             // to decide what kind of packets received
                             uint8_t address  = commsReceived_[1];
                             DataQueue<commsFormat *> *tmpQueue = getQueue(address);
                             if (tmpQueue != nullptr) {
                                 // switch on received data to know what to do - received ACK/NACK or other
-                                switch(control & COMMS_CONTROL_TYPES) {
+                                switch(control[1] & COMMS_CONTROL_TYPES) {
                                     case COMMS_CONTROL_NACK:
                                         // received NACK
                                         // TODO: modify timeout for next sent frame?
@@ -95,7 +104,9 @@ void commsControl::receiver() {
                                     default:
                                         // received DATA
                                         receivePacket(tmpQueue);
+
                                         commsAck_->setAddress(&address);
+                                        commsAck_->setSequenceReceive(((control[1] >> 1) & 0x7F) + 1);
                                         sendPacket(commsAck_);
                                         break;
                                 }
@@ -198,7 +209,7 @@ void commsControl::sendQueue(DataQueue<commsFormat *> *queue) {
         // reset sending counter
         lastTransTime_ = millis();
 
-//        queue->front().setSequenceSend(sequenceSend_);
+        queue->front()->setSequenceSend(sequenceSend_);
 
         sendPacket(queue->front());
     }
@@ -228,10 +239,13 @@ void commsControl::receivePacket(DataQueue<commsFormat *> *queue) {
 
 // if FCS is ok, remove from queue
 void commsControl::finishPacket(DataQueue<commsFormat *> *queue) {
-    // TODO check if transmission counter is aligned with transfer to remove
     if (!queue->isEmpty()) {
-        sequenceSend_ = (sequenceSend_ + 1) % 128;
-        queue->dequeue();
+        // get the sequence send from first entry in the queue, add one as that should be return
+        // 0x7F to deal with possible overflows (0 should follow after 127)
+        if (((queue->front()->getSequenceSend() + 1) & 0x7F) ==  sequenceReceive_) {
+            sequenceSend_ = (sequenceSend_ + 1) % 128;
+            delete queue->dequeue();
+        }
     }
 }
 

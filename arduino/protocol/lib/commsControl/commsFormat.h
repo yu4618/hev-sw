@@ -39,6 +39,9 @@ public:
     void setSequenceSend   (uint8_t counter);
     void setSequenceReceive(uint8_t counter);
 
+    uint8_t getSequenceSend   ();
+    uint8_t getSequenceReceive();
+
     void copyData(uint8_t* data, uint8_t dataSize);
 
     static commsFormat* generateACK()   { return new commsFormat(0, 0, COMMS_CONTROL_ACK  << 8); }
