@@ -15,11 +15,22 @@ commsControl::commsControl(uint32_t baudrate) {
     memset(commsReceived_, 0, sizeof(commsReceived_));
     memset(commsSend_    , 0, sizeof(commsSend_    ));
 
-    queueAlarm_ = DataQueue<commsALARM>(CONST_MAX_SIZE_QUEUE);
-    queueData_  = DataQueue<commsDATA> (CONST_MAX_SIZE_QUEUE);
-    queueCmd_   = DataQueue<commsCMD>  (CONST_MAX_SIZE_QUEUE);
+    queueAlarm_ = new RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE>();
+    queueData_  = new RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE>();
+    queueCmd_   = new RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE>();
 
     commsTmp_   = commsFormat(CONST_MAX_SIZE_PACKET - CONST_MIN_SIZE_PACKET );
+
+    commsAck_ = commsFormat::generateACK();
+    commsNck_ = commsFormat::generateNACK();
+
+    sequenceSend_    = 0;
+    sequenceReceive_ = 0;
+}
+
+// WIP
+commsControl::~commsControl() {
+    ;
 }
 
 void commsControl::beginSerial() {
@@ -29,12 +40,16 @@ void commsControl::beginSerial() {
 // main function to always call and try and send data
 // TODO: needs switch on data type with global timeouts on data pushing
 void commsControl::sender() {
-    if (millis() > lastTransTime_ + 5 ) {
-        sendQueue(reinterpret_cast<DataQueue<commsFormat>*>(&queueAlarm_));
+    if (millis() > lastTransTime_ + CONST_TIMEOUT_ALARM ) {
+        sendQueue(queueAlarm_);
     }
 
-    if (millis() > lastTransTime_ + 5000 ) {
-        sendQueue(reinterpret_cast<DataQueue<commsFormat>*>(&queueData_));
+    if (millis() > lastTransTime_ + CONST_TIMEOUT_CMD ) {
+        sendQueue(queueCmd_);
+    }
+
+    if (millis() > lastTransTime_ + CONST_TIMEOUT_DATA ) {
+        sendQueue(queueData_);
     }
 }
 
@@ -66,15 +81,18 @@ void commsControl::receiver() {
                         // if managed to decode and compare CRC
                         if (decoder(lastTrans_, startTransIndex_, lastTransIndex_)) {
 
+                            // FIXME really need to move commsReceived_ to be commsFormat type - lot of control, address operations
                             // to decide ACK/NACK/other
-                            uint8_t control = commsReceived_[3];
+                            uint8_t control[2];
+                            memcpy(control, commsReceived_ + 2, 2);
+                            sequenceReceive_ = (control[0] >> 1) & 0x7F;
 
                             // to decide what kind of packets received
                             uint8_t address  = commsReceived_[1];
-                            DataQueue<commsFormat>* tmpQueue = getQueue(address);
+                            RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *tmpQueue = getQueue(address);
                             if (tmpQueue != nullptr) {
                                 // switch on received data to know what to do - received ACK/NACK or other
-                                switch(control & COMMS_CONTROL_TYPES) {
+                                switch(control[1] & COMMS_CONTROL_TYPES) {
                                     case COMMS_CONTROL_NACK:
                                         // received NACK
                                         // TODO: modify timeout for next sent frame?
@@ -87,7 +105,10 @@ void commsControl::receiver() {
                                     default:
                                         // received DATA
                                         receivePacket(tmpQueue);
-                                        sendPacket(&commsACK(address));
+
+                                        commsAck_->setAddress(&address);
+                                        commsAck_->setSequenceReceive(((control[1] >> 1) & 0x7F) + 1);
+                                        sendPacket(commsAck_);
                                         break;
                                 }
                             }
@@ -112,15 +133,15 @@ void commsControl::receiver() {
 
 // adding new values into queue
 // WIP
-void commsControl::registerData(dataType type, dataFormat* values) {
-    commsDATA newValue;
+void commsControl::registerData(dataType type, dataFormat *values) {
+    commsFormat *newValue = commsFormat::generateDATA();
 
     // switch on different received data types
     switch(type) {
         case dataAlarm:
             break;
         case dataNormal:
-            newValue.setInformation(values);
+            newValue->setInformation(values);
             break;
         case dataCommand:
             break;
@@ -128,15 +149,18 @@ void commsControl::registerData(dataType type, dataFormat* values) {
             break;
     }
 
-    // calculate CRC for the new entry
-    newValue.generateCrc();
     // add new entry to the queue
-    queueData_.enqueue(newValue);
+    if (queueData_->isFull()) {
+        commsFormat *tmpComms;
+        queueData_->pop(tmpComms);
+        delete tmpComms;
+    }
+    queueData_->push(newValue);
 }
 
 
 // general encoder of any transmission
-bool commsControl::encoder(uint8_t* data, uint8_t dataSize) {
+bool commsControl::encoder(uint8_t *data, uint8_t dataSize) {
     if (dataSize > 0) {
         commsSendSize_ = 0;
         uint8_t tmpVal = 0;
@@ -185,16 +209,15 @@ bool commsControl::decoder(uint8_t* data, uint8_t dataStart, uint8_t dataStop) {
 }
 
 // sending anything of commsDATA format
-void commsControl::sendQueue(DataQueue<commsFormat>* queue) {
+void commsControl::sendQueue(RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue) {
     // if have data to send
     if (!queue->isEmpty()) {
         // reset sending counter
         lastTransTime_ = millis();
 
-        // TODO define transmission counter
-        // queue->front().setCounter(someValue)
+        queue->operator [](0)->setSequenceSend(sequenceSend_);
 
-        sendPacket(&(queue->front()));
+        sendPacket(queue->operator [](0));
     }
 }
 
@@ -209,34 +232,40 @@ void commsControl::sendPacket(commsFormat *packet) {
 
 // resending the packet, can lower the timeout since either NACK or wrong FCS already checked
 //WIP
-void commsControl::resendPacket(DataQueue<commsFormat>* queue) {
+void commsControl::resendPacket(RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue) {
     ;
 }
 
 
 // receiving anything of commsFormat
 // WIP
-void commsControl::receivePacket(DataQueue<commsFormat>* queue) {
+void commsControl::receivePacket(RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue) {
     ;
 }
 
 // if FCS is ok, remove from queue
-void commsControl::finishPacket(DataQueue<commsFormat>* queue) {
-    // TODO check if transmission counter is aligned with transfer to remove
+void commsControl::finishPacket(RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue) {
     if (!queue->isEmpty()) {
-        queue->dequeue();
+        // get the sequence send from first entry in the queue, add one as that should be return
+        // 0x7F to deal with possible overflows (0 should follow after 127)
+        if (((queue->operator [](0)->getSequenceSend() + 1) & 0x7F) ==  sequenceReceive_) {
+            sequenceSend_ = (sequenceSend_ + 1) % 128;
+            commsFormat * tmpComms;
+            queue->pop(tmpComms);
+            delete tmpComms;
+        }
     }
 }
 
 // get link to queue according to packet format
-DataQueue<commsFormat>* commsControl::getQueue(uint8_t address) {
+RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *commsControl::getQueue(uint8_t address) {
     switch (address & PACKET_TYPE) {
         case PACKET_ALARM:
-            return reinterpret_cast<DataQueue<commsFormat>*>(&queueAlarm_);
+            return queueAlarm_;
         case PACKET_CMD:
-            return reinterpret_cast<DataQueue<commsFormat>*>(&queueCmd_);
+            return queueCmd_;
         case PACKET_DATA:
-            return reinterpret_cast<DataQueue<commsFormat>*>(&queueData_);
+            return queueData_;
         default:
             return nullptr;
     }
