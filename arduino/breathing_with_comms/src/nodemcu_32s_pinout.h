@@ -2,29 +2,36 @@
 //    #include <LiquidCrystal_I2C.h>   //LCD over I2C
 // Node MCU 32s
     // pwm pins
-const int pin_valve_in       = 6;
-const int pin_valve_out      = 7;
-const int pin_valve_scavenge = 8;
-const int pin_valve_purge    = 15;
+const int pin_valve_air_in   = 3;
+const int pin_valve_o2_in    = 5;
+const int pin_valve_out      = 21;
+const int pin_valve_scavenge = 19;
+const int pin_valve_purge    = 18;
 
     // adcs
-const int pin_p_supply       = A0; 
-const int pin_p_regulated    = A3;
-const int pin_p_buffer       = A6;
-const int pin_p_inhale       = A7;
-const int pin_p_patient      = A4;
-const int pin_temp           = A5;
+const int pin_p_air_supply       = A0; 
+const int pin_p_air_regulated    = A3;
+const int pin_p_buffer           = A6;
+const int pin_p_inhale           = A7;
+const int pin_p_patient          = A4;
+const int pin_temp               = A5;
+const int pin_p_o2_supply       = A17; 
+const int pin_p_o2_regulated    = A16;
 
     // leds
-const int pin_led_0          = 13;
-const int pin_led_1          =  9;
-const int pin_led_2          = 10;
+const int pin_led_0          = 17;
+const int pin_led_1          = 16;
+const int pin_led_2          =  1;
+
+    // i2c
 
     // buzzer
-const int pin_buzzer         = 11;
+const int pin_buzzer         =  2;
 
     // buttons
-const int pin_button_0       = 2;
+const int pin_button_0       = 13;
+
+
 
 // lcd Not enough GPIOs, we can use I2C if needed NOTE: This code was not tested through I2C
 // constants needed 
