@@ -32,6 +32,10 @@ def hello_worlds():
 def settings():
     return render_template('settings.html', result=live_data())
 
+@WEBAPP.route('/fan')
+def fan():
+    return render_template('fan.html', result=live_data())
+
 
 def multiple_appends(listname, *element):
     listname.extend(element)

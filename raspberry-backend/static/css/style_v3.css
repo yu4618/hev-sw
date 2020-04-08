@@ -10263,5 +10263,11 @@ body {
 .fa-w-16{ width:95px;height:95px;}
 .path-icon{ fill:rgb(31,71,147); }
 .w-100{width:100%;}
-.alarm-red{border: 1px solid #ff0000; width:25rem;}
+.alarm-ok{border: 1px solid var(--cern); width:20rem;}
+.alarm-red{border-color:#ff0000;color:#ff0000}
 #alarms{color:red;}
+div.active{
+    background-color: rgb(211,211,211);
+    border-radius: 0.25rem;
+}
+.patient{ min-width:12rem;}
