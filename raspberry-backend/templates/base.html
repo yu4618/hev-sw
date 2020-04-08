@@ -25,7 +25,7 @@
               <li class="nav-item dropdown">
                     <i class="fas fa-user fa-fw"></i></a>
 </li>
-Patient Name
+{{patient}}
             </ul>
         </nav>
         <div id="layoutSidenav">
@@ -132,7 +132,11 @@ setInterval('update_variables()', 2000);
   function update_alarms() {
       $.getJSON("live-alarms",
               function (data) {
-                  document.getElementById("alarms").innerHTML = data.alarms;                
+                  if (data.alarms !== 'none') {
+                     document.getElementById("alarms").innerHTML = data.alarms;                
+                     } else {
+                     document.getElementById("alarms").innerHTML = ''
+                     }    
               }
       );
   }

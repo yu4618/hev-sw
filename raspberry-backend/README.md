@@ -45,7 +45,7 @@ python3 app.py
 Start firefox with the following address:
 
 ```sh
-firefox 127.0.0.1:5000/new
+firefox 127.0.0.1:5000
 ```
 
 
