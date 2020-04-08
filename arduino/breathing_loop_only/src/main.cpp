@@ -60,8 +60,8 @@ void setup()
 
     pinMode(pin_valve_air_in, OUTPUT);
     pinMode(pin_valve_o2_in, OUTPUT);
-    pinMode(pin_valve_out, OUTPUT);
-    pinMode(pin_valve_scavenge, OUTPUT);
+    pinMode(pin_valve_inhale, OUTPUT);
+    pinMode(pin_valve_exhale, OUTPUT);
     pinMode(pin_valve_purge, OUTPUT);
 
     pinMode(pin_p_air_supply, INPUT);

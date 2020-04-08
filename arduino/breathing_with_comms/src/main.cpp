@@ -55,9 +55,10 @@ void setup()
 
     pinMode(pin_valve_air_in, OUTPUT);
     pinMode(pin_valve_o2_in, OUTPUT);
-    pinMode(pin_valve_out, OUTPUT);
-    pinMode(pin_valve_scavenge, OUTPUT);
+    pinMode(pin_valve_inhale, OUTPUT);
+    pinMode(pin_valve_exhale, OUTPUT);
     pinMode(pin_valve_purge, OUTPUT);
+    pinMode(pin_valve_atmosphere, OUTPUT);
 
     pinMode(pin_p_air_supply, INPUT);
     pinMode(pin_p_air_regulated, INPUT);
@@ -65,9 +66,10 @@ void setup()
     pinMode(pin_p_inhale, INPUT);
     pinMode(pin_p_patient, INPUT);
     pinMode(pin_temp, INPUT);
-#ifdef HAS_O2
+#ifdef HEV_FULL_SYSTEM
     pinMode(pin_p_o2_supply, INPUT);
     pinMode(pin_p_o2_regulated, INPUT);
+    pinMode(pin_p_diff_patient, INPUT);
 #endif
 
     pinMode(pin_led_0, OUTPUT);
