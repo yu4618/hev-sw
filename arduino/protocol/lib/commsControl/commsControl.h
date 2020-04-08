@@ -1,8 +1,11 @@
 #ifndef COMMS_CONTROL_H
 #define COMMS_CONTROL_H
 
+// Communication protocol between rasp and arduino based on HDLC format
+// author Peter Svihra <peter.svihra@cern.ch>
+
 #include <Arduino.h>
-#include "Queue.h"
+#include "RingBuf.h"
 
 #include "commsConstants.h"
 #include "commsFormat.h"
@@ -12,6 +15,7 @@
 class commsControl {
 public:
     commsControl(uint32_t baudrate = 115200);
+    ~commsControl();
 
     void beginSerial();
 
@@ -22,12 +26,12 @@ public:
     void receiver();
 
 private:
-    DataQueue<commsFormat>* getQueue(uint8_t address);
+    RingBuf<commsFormat *,CONST_MAX_SIZE_QUEUE> *getQueue(uint8_t address);
 
-    void sendQueue   (DataQueue<commsFormat>* queue);
-    void resendPacket (DataQueue<commsFormat>* queue);
-    void receivePacket(DataQueue<commsFormat>* queue);
-    void finishPacket (DataQueue<commsFormat>* queue);
+    void sendQueue    (RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue);
+    void resendPacket (RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue);
+    void receivePacket(RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue);
+    void finishPacket (RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue);
 
     bool encoder(uint8_t* data, uint8_t dataSize);
     bool decoder(uint8_t* data, uint8_t dataStart, uint8_t dataStop);
@@ -35,9 +39,15 @@ private:
     void sendPacket(commsFormat* packet);
 
 private:
-    DataQueue<commsALARM> queueAlarm_;
-    DataQueue<commsDATA>  queueData_ ;
-    DataQueue<commsCMD>   queueCmd_  ;
+    uint8_t sequenceSend_;
+    uint8_t sequenceReceive_;
+
+    commsFormat* commsAck_;
+    commsFormat* commsNck_;
+
+    RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queueAlarm_;
+    RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queueData_;
+    RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queueCmd_;
 
     commsFormat commsTmp_;
 

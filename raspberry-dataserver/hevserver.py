@@ -8,6 +8,7 @@ import json
 import svpi
 import time
 import threading
+import argparse
 from typing import List
 import logging
 logging.basicConfig(level=logging.INFO,
@@ -23,6 +24,7 @@ class HEVServer(object):
         self._broadcasting_period = 1
         self._broadcasting = True
         self._lock = threading.Lock()  # lock for the database
+        self._generator = svpi.svpi()
 
         # start worker thread to update values in background
         worker = threading.Thread(target=self.polling, daemon=True)
@@ -32,15 +34,19 @@ class HEVServer(object):
         with self._lock:
             return f"alarms: {self._alarms}. sensor values: {self._values}"
 
+    def set_input_file(self, input_file):
+        self._generator.addInputFile(input_file)
+        
     def polling(self) -> None:
         # get values in the background
         while self._polling:
             with self._lock:
-                self._values = svpi.getValues()
-                self._alarms = svpi.getAlarms()
-                self._settings = svpi.getThresholds()
+                self._values = self._generator.getValues()
+                self._alarms = self._generator.getAlarms()
+                self._settings = self._generator.getThresholds()
             time.sleep(self._broadcasting_period)
 
+            
     async def handle_request(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         # listen for queries on the request socket
         data = await reader.read(300)
@@ -54,7 +60,7 @@ class HEVServer(object):
             logging.debug(f"{addr!r} requested to change to mode {mode!r}")
 
             # send via protocol and prepare reply
-            if svpi.setMode(mode):
+            if self._generator.setMode(mode):
                 packet = f"""{{"type": "ackmode", "mode": \"{mode}\"}}""".encode()
             else:
                 packet = f"""{{"type": "nack"}}""".encode()
@@ -64,7 +70,7 @@ class HEVServer(object):
                 f"{addr!r} requested to set thresholds to {thresholds!r}")
 
             # send via protocol
-            payload = svpi.setThresholds(thresholds)
+            payload = self._generator.setThresholds(thresholds)
             # prepare reply
             packet = f"""{{"type": "ackthresholds", "thresholds": \"{payload}\"}}""".encode()
         elif request["type"] == "setup":
@@ -75,8 +81,8 @@ class HEVServer(object):
                 f"{addr!r} requested to set thresholds to {thresholds!r}")
 
             # send via protocol and prepare reply
-            if svpi.setMode(mode):
-                svpi.setThresholds(thresholds)
+            if self._generator.setMode(mode):
+                self._generator.setThresholds(thresholds)
                 packet = f"""{{"type": "ack", "mode": \"{mode}\", "thresholds": \"{thresholds}\"}}""".encode()
             else:
                 packet = f"""{{"type": "nack"}}""".encode()
@@ -146,5 +152,12 @@ class HEVServer(object):
 
 
 if __name__ == "__main__":
+    #parser to allow us to pass arguments to hevserver
+    parser = argparse.ArgumentParser(description='Arguments to run hevserver')
+    parser.add_argument('--inputFile', type=str, default = '', help='a test file to load data')
+    args = parser.parse_args()
+    
     hevsrv = HEVServer()
+    if args.inputFile != '':
+        hevsrv.set_input_file(args.inputFile)
     hevsrv.serve_all()

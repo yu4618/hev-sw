@@ -11,12 +11,14 @@
 // class to provide all needed control in data format
 class commsFormat {
 public:
-    commsFormat(uint8_t infoSize = 0);
+    commsFormat(uint8_t infoSize = 0, uint8_t address = 0x00, uint16_t control = 0x0000);
 
     uint8_t* getData()    { return data_; }
     uint8_t  getSize()    { return packetSize_; }
 
     void setInformation(dataFormat* values);
+
+    void assignBytes(uint8_t* target, uint8_t* source, uint8_t size, bool calcCrc = true);
 
     void generateCrc(bool assign = true);
     bool compareCrc();
@@ -41,37 +43,37 @@ private:
 
 
 ///////////////////////////////////////////////////////////////////////////
-// DATA specific class - contains X bytes of data
-class commsDATA: public commsFormat {
-public:
-    commsDATA() : commsFormat(8) { *(getAddress()) = 0x40; } // contains 8 information bytes
-};
-
-///////////////////////////////////////////////////////////////////////////
 // ALARM specific class - contains X bytes of data and specific control flag
 class commsALARM: public commsFormat {
 public:
-    commsALARM() : commsFormat(4) { *(getAddress()) = 0xC0; } // contains 4 information bytes
+    commsALARM() : commsFormat(4, PACKET_ALARM) {;} // contains 4 information bytes
 };
 
 ///////////////////////////////////////////////////////////////////////////
 // CMD specific class - contains X bytes of data and specific control flag
 class commsCMD: public commsFormat {
 public:
-    commsCMD() : commsFormat(8) { *(getAddress()) = 0x80; } // contains 8 information bytes
+    commsCMD() : commsFormat(8, PACKET_CMD) {;} // contains 8 information bytes
+};
+
+///////////////////////////////////////////////////////////////////////////
+// DATA specific class - contains X bytes of data
+class commsDATA: public commsFormat {
+public:
+    commsDATA() : commsFormat(8, PACKET_DATA) {;} // contains 8 information bytes
 };
 
 ///////////////////////////////////////////////////////////////////////////
 // ACK specific class - contains specific control flag
 class commsACK : public commsFormat {
 public:
-    commsACK()  : commsFormat() { *(getControl()+1) = COMMS_CONTROL_ACK; } // contains 0 information bytes, has specific control type
+    commsACK(uint8_t address)  : commsFormat(0, address, COMMS_CONTROL_ACK << 8) {;} // contains 0 information bytes, has specific control type
 };
 
 ///////////////////////////////////////////////////////////////////////////
 // NACK specific class - contains specific control flag
 class commsNACK: public commsFormat {
 public:
-  commsNACK() : commsFormat() { *(getControl()+1) = COMMS_CONTROL_NACK; } // contains 0 information bytes, has specific control type
+  commsNACK(uint8_t address) : commsFormat(0, address, COMMS_CONTROL_NACK << 8) {;} // contains 0 information bytes, has specific control type
 };
 #endif // COMMSFORMAT_H

@@ -82,9 +82,12 @@ def monitoring(source_address):
                 data_receiver = hevclient.get_values()
                 data_alarms = hevclient.get_alarms()
 
+                # data alarms can have length of 6, joining all the strings
+                data_alarms = ','.join(data_alarms) 
+
                 random_data = {
                     'time' : timestamp,
-                    'alarms' : data_alarms[0],
+                    'alarms' : data_alarms,
                     'temperature': data_receiver[0],
                     'pressure': data_receiver[1],
                     'variable3': data_receiver[2],

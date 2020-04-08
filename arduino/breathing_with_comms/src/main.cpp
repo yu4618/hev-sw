@@ -1,52 +1,8 @@
 #include <Arduino.h>
 #include "commsControl.h"
-//#include <LiquidCrystal.h>
+#include "test_hw_loop.h"
+#include "common.h"
 
-#if defined(ARDUINO_FEATHER_ESP32)
-#define BOARD "HUZZAH32"
-#include <huzzah32_pinout.h>
-#elif defined(ARDUINO_NodeMCU_32S)
-#define BOARD "ESP32"
-#include <nodemcu_32s_pinout.h>
-#elif defined(ARDUINO_AVR_UNO)
-#define BOARD "UNO"
-#include <Arduino_uno_pinout.h>
-#elif defined(ARDUINO_SAMD_MKRVIDOR4000)
-#define BOARD "VIDOR"
-#include <Arduino_MKR_4000_Vidor_pinout.h>
-#elif defined(ARDUINO_SAMD_MKRWIFI1010)
-#define BOARD "MKR1010"
-#include <Arduino_MKR_1010_WIFI_pinout.h>
-#elif defined(ARDUINO_SAM_DUE)
-#define BOARD "MKR1010"
-#include <Arduino_Due_pinout.h>
-#elif defined(ARDUINO_AVR_YUN)
-#define BOARD "MKR1010"
-#include <Arduino_Yun_pinout.h>
-#endif
-
-//LiquidCrystal lcd(pin_lcd_rs, pin_lcd_en, pin_lcd_d4, pin_lcd_d5, pin_lcd_d6, pin_lcd_d7);
-// input params
-enum hev_modes : byte
-{
-    HEV_MODE_PS,
-    HEV_MODE_CPAP,
-    HEV_MODE_PRVC,
-    HEV_MODE_TEST
-};
-
-enum valve_states : bool
-{
-    V_OPEN = LOW,
-    V_CLOSED = HIGH
-};
-
-enum lab_cycle_modes : byte
-{
-    LAB_MODE_BREATHE = 0,
-    LAB_MODE_PURGE = 1,
-    LAB_MODE_FLUSH = 2
-};
 int ventilation_mode = HEV_MODE_PS;
 float working_pressure = 1;             //?
 float inspiratory_minute_volume = 6000; // ml/min
@@ -58,27 +14,6 @@ float pause_time = 1.0;       // range?
 //float expiratory_time ; // calc
 float expiratory_minute_volume; // calc?? same as inspiratory_minute_volume?
 float trigger_sensitivity;
-
-// states
-enum BS_STATES : byte
-{
-    BS_IDLE,
-    BS_BUFF_PREFILL,
-    BS_BUFF_FILL,
-    BS_BUFF_LOADED,
-    BS_BUFF_PRE_INHALE,
-    BS_INHALE,
-    BS_WAIT,
-    BS_EXHALE_FILL,
-    BS_EXHALE,
-    BS_BUFF_PURGE,
-    BS_BUFF_FLUSH
-};
-
-int bs_state = BS_IDLE;
-
-byte lab_cycle_mode = 0;
-bool start = LOW;
 
 // calculations
 float calc_tidal_volume()
@@ -115,24 +50,25 @@ float calc_expiratory_minute_volume()
 dataFormat data;
 commsControl comms;
 
-int currentState  = 0;
-int previousState = 0;
-
-
 void setup()
 {
 
-    pinMode(pin_valve_in, OUTPUT);
+    pinMode(pin_valve_air_in, OUTPUT);
+    pinMode(pin_valve_o2_in, OUTPUT);
     pinMode(pin_valve_out, OUTPUT);
     pinMode(pin_valve_scavenge, OUTPUT);
     pinMode(pin_valve_purge, OUTPUT);
 
-    pinMode(pin_p_supply, INPUT);
-    pinMode(pin_p_regulated, INPUT);
+    pinMode(pin_p_air_supply, INPUT);
+    pinMode(pin_p_air_regulated, INPUT);
     pinMode(pin_p_buffer, INPUT);
     pinMode(pin_p_inhale, INPUT);
     pinMode(pin_p_patient, INPUT);
     pinMode(pin_temp, INPUT);
+#ifdef HAS_O2
+    pinMode(pin_p_o2_supply, INPUT);
+    pinMode(pin_p_o2_regulated, INPUT);
+#endif
 
     pinMode(pin_led_0, OUTPUT);
     pinMode(pin_led_1, OUTPUT);
@@ -141,128 +77,31 @@ void setup()
     pinMode(pin_buzzer, OUTPUT);
     pinMode(pin_button_0, INPUT);
 
-    // Serial.begin(9600);
-
     comms.beginSerial();
-    data.count = 0;
-    // lcd.begin(16, 2);  // Declare number of columns and rows
+
 }
-
-void setValves(bool vin, bool vout, bool vscav, bool vpurge)
-{
-
-    digitalWrite(pin_valve_in, vin);
-    digitalWrite(pin_valve_out, vout);
-    digitalWrite(pin_valve_scavenge, vscav);
-    digitalWrite(pin_valve_purge, vpurge);
-}
-
-
-
-void breath_cycle()
-{
-    // basic cycle for testing hardware
-    int next_state;
-    switch (bs_state)
-    {
-    case BS_IDLE:
-        start = digitalRead(pin_button_0);
-        if (start == HIGH)
-        {
-            next_state = BS_BUFF_PREFILL;
-        }
-        else
-        {
-            delay(1000);
-            next_state = BS_IDLE;
-        }
-        setValves(V_CLOSED, V_OPEN, V_OPEN, V_CLOSED);
-        break;
-    case BS_BUFF_PREFILL:
-        setValves(V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED);
-        delay(1000);
-        next_state = BS_BUFF_FILL;
-        break;
-    case BS_BUFF_FILL:
-        setValves(V_OPEN, V_CLOSED, V_OPEN, V_CLOSED);
-        delay(500);
-        next_state = BS_BUFF_LOADED;
-        break;
-    case BS_BUFF_LOADED:
-        setValves(V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED);
-        switch (lab_cycle_mode)
-        {
-        case LAB_MODE_FLUSH:
-            delay(500);
-            next_state = BS_BUFF_FLUSH;
-            break;
-        case LAB_MODE_PURGE:
-            delay(500);
-            next_state = BS_BUFF_PURGE;
-            break;
-        default:
-            delay(1500);
-            next_state = BS_BUFF_PRE_INHALE;
-        }
-        break;
-    case BS_BUFF_PRE_INHALE:
-        setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED);
-        delay(100);
-        next_state = BS_INHALE;
-        break;
-    case BS_INHALE:
-        setValves(V_CLOSED, V_OPEN, V_CLOSED, V_CLOSED);
-        delay(100);
-        next_state = BS_WAIT;
-        break;
-    case BS_WAIT:
-        setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED);
-        delay(1000);
-        next_state = BS_EXHALE_FILL;
-        break;
-    case BS_EXHALE_FILL:
-        setValves(V_OPEN, V_CLOSED, V_OPEN, V_CLOSED);
-        delay(1000);
-        next_state = BS_EXHALE;
-        break;
-    case BS_EXHALE:
-        setValves(V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED);
-        delay(10);
-        next_state = BS_BUFF_LOADED;
-        break;
-    case BS_BUFF_PURGE:
-        setValves(V_CLOSED, V_CLOSED, V_OPEN, V_OPEN);
-        delay(1000);
-        next_state = BS_BUFF_PREFILL;
-        break;
-    case BS_BUFF_FLUSH:
-        setValves(V_CLOSED, V_OPEN, V_OPEN, V_CLOSED);
-        delay(1000);
-        next_state = BS_IDLE;
-        break;
-    default:
-        next_state = bs_state;
-    }
-    bs_state = next_state;
-}
-
 
 void loop()
 {
-    // put your main code here, to run repeatedly:
-    //Serial.println(BOARD);
-    // delay(1000);
 
     // buzzer
     // tone(pin, freq (Hz), duration);
-    breath_cycle();
-    // Serial.println("state: " + String(bs_state));
 
-    data.count = 1;
-    data.pressure = bs_state; //fake
+    data.fsm_state = getFsmState();
+    data.readback_mode = getLabCycleMode();
+    data.pressure_air_regulated = 0x1234;
+    data.pressure_buffer        = 0xabcd; 
+
+    //breath_cycle();
+    FSM_assignment();
+    FSM_breath_cycle();
+   
+
     comms.registerData(dataNormal, &data);
     // per cycle sender
     comms.sender();
     // per cycle receiver
     comms.receiver();
+
+    delay(10);
 }

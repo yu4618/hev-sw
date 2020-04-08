@@ -1,30 +1,37 @@
-#include <Wire.h>    // I2C control
-//    #include <LiquidCrystal_I2C.h>   //LCD over I2C
-// ESP32 HUZZAH
+// Node MCU 32s
+#define BOARD "NODEMCU32S"
+#define HAS_O2
     // pwm pins
-const int pin_valve_in       = 13;
-const int pin_valve_out      = 12;
-const int pin_valve_scavenge = 27;
-const int pin_valve_purge    = 21;
+const int pin_valve_air_in   = 3;
+const int pin_valve_o2_in    = 5;
+const int pin_valve_out      = 21;
+const int pin_valve_scavenge = 19;
+const int pin_valve_purge    = 18;
 
     // adcs
-const int pin_p_supply       = A0;
-const int pin_p_regulated    = A1;
-const int pin_p_buffer       = A2;
-const int pin_p_inhale       = A3;
-const int pin_p_patient      = A4;
-const int pin_temp           = A13;
+const int pin_p_air_supply       = A0; 
+const int pin_p_air_regulated    = A3;
+const int pin_p_buffer           = A6;
+const int pin_p_inhale           = A7;
+const int pin_p_patient          = A4;
+const int pin_temp               = A5;
+const int pin_p_o2_supply       = A17; 
+const int pin_p_o2_regulated    = A16;
 
     // leds
-const int pin_led_0          = 33;
-const int pin_led_1          = 15;
-const int pin_led_2          = 32;
+const int pin_led_0          = 17;
+const int pin_led_1          = 16;
+const int pin_led_2          =  1;
+
+    // i2c
 
     // buzzer
-const int pin_buzzer         = 14;
+const int pin_buzzer         =  2;
 
     // buttons
-const int pin_button_0       = 4;
+const int pin_button_0       = 13;
+
+
 
 // lcd Not enough GPIOs, we can use I2C if needed NOTE: This code was not tested through I2C
 // constants needed 

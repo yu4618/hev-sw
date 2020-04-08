@@ -2,12 +2,12 @@
 
 {% block content %}
 <div class="container">
-  <form>
+  <form action="{{ url_for('data_handler') }}" method="post">
     <div class="row justify-content-center">
       <div class="card rounded-lg w-100 px-0 py-0">
         <div class="card-header px-1 py-1">Personal Details</div>
         <div class="card-body px-1 py-1">
-          <span class="form-group"><label class="small" for="inputName">Name</label><input class="form-control py-0" id="inputName" type="name" placeholder="John Smith" /></span>
+          <span class="form-group"><label class="small" for="inputName">Name</label><input class="form-control py-0" id="inputName" type="name" value="John Smith" name='patient_name' /></span>
 
           <span class="form-group"><label class="small" for="inputEmailAddress">Age</label><input class="form-control py-0" id="inputAge" type="number" placeholder=87 /></span>
           <span class="form-group"><label class="small" for="inputHeight">Height</label><input class="form-control py-0" id="inputHeight" type="number" placeholder=180 /> cm</span>
@@ -19,8 +19,12 @@
       <div class="card rounded-lg w-100 px-0 py-0">
         <div class="card-header px-1 py-1">Thresholds</div>
         <div class="card-body px-1 py-1">
-          <span class="form-group"><label class="small" for="inputPassword">Lower</label><input class="form-control py-0" id="inputThres1" type="number" placeholder=1 /></span>
-          <span class="form-group"><label class="small" for="inputPassword">Upper</label><input class="form-control py-0" id="inputThres2" type="number" placeholder=10 /></span>
+          <span class="form-group"><label class="small" for="inputPassword">var_1</label><input class="form-control py-0" id="inputThres1" type="number" value=1 name="variable1" /></span>
+          <span class="form-group"><label class="small" for="inputPassword">var_2</label><input class="form-control py-0" id="inputThres1" type="number" value=1 name="variable2" /></span>
+          <span class="form-group"><label class="small" for="inputPassword">var_3</label><input class="form-control py-0" id="inputThres1" type="number" value=1 name="variable3" /></span>
+          <span class="form-group"><label class="small" for="inputPassword">var_4</label><input class="form-control py-0" id="inputThres1" type="number" value=1 name="variable4" /></span>
+          <span class="form-group"><label class="small" for="inputPassword">var_5</label><input class="form-control py-0" id="inputThres1" type="number" value=1 name="variable5" /></span>
+          <span class="form-group"><label class="small" for="inputPassword">var_6</label><input class="form-control py-0" id="inputThres1" type="number" value=1 name="variable6" /></span>
         </div>
       </div>
     </div>
