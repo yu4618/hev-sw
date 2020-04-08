@@ -3,26 +3,70 @@
 # Python monitoring code
 # USAGE:  python3 app.py
 #
-# Last update: March 29, 2020
+# Last update: April 7, 2020
 
 from time import time
-from flask import Flask, render_template, make_response, jsonify, Response
+from flask import Flask, render_template, make_response, jsonify, Response, request
 import sqlite3
 #import json
 from flask import json
 import chardet
+from hevclient import HEVClient
+
 
 WEBAPP = Flask(__name__)
+
+# Instantiating the client
+hevclient = HEVClient()
+
 
 @WEBAPP.route('/')
 def hello_world():
     return render_template('index.html', result=live_data())
+
 @WEBAPP.route('/new')
 def hello_worlds():
     return render_template('index_v3.html', result=live_data())
+
 @WEBAPP.route('/settings')
 def settings():
     return render_template('settings.html', result=live_data())
+
+@WEBAPP.route('/fan')
+def fan():
+    return render_template('fan.html', result=live_data())
+
+
+def multiple_appends(listname, *element):
+    listname.extend(element)
+
+
+@WEBAPP.route('/data_handler', methods=['POST'])
+def data_handler():
+    """
+    Send configuration data to the Arduino
+    """
+    output = []
+    var_1 = request.form['variable1']
+    var_2 = request.form['variable2']
+    var_3 = request.form['variable3']
+    var_4 = request.form['variable4']
+    var_5 = request.form['variable5']
+    var_6 = request.form['variable6']
+  
+    patient_name = request.form['patient_name']
+
+ 
+    multiple_appends(output, var_1, var_2, var_3, var_4, var_5, var_6)
+    
+    converted_output = [float(i) for i in output] 
+
+    hevclient.set_thresholds(converted_output)
+
+    return render_template('index.html', result=live_data(), patient=patient_name)
+
+
+
 
 @WEBAPP.route('/live-data', methods=['GET'])
 def live_data():
@@ -50,15 +94,6 @@ def live_data():
         data['variable4'] = round(fetched[4],2)                
         data['variable5'] = round(fetched[5],2)                
         data['variable6'] = round(fetched[6],2)                
-
-
-    #json_string = json.dumps(data, ensure_ascii = False)
-    #json_str = json.dumps(data, ensure_ascii = False, indent=4, sort_keys=True)
-    #json_utf8 = json_str.encode('utf-8')
-    #response = make_response(json_utf8)
-    #response.headers['Content-Type'] = 'application/json; charset=utf-8'
-    #response.headers['mimetype'] = 'application/json'
-
 
     response = make_response(json.dumps(data).encode('utf-8') )
     response.content_type = 'application/json'
