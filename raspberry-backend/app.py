@@ -47,7 +47,7 @@ def data_handler():
     Send configuration data to the Arduino
     """
     output = []
-    var_1 = request.form['variable1']
+    var_1 = request.form['pressure_air_supply']
     var_2 = request.form['variable2']
     var_3 = request.form['variable3']
     var_4 = request.form['variable4']

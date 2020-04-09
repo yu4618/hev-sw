@@ -34,24 +34,30 @@
 	    </div>
 	</div>
         <div class="card-body px-1 py-1">
-          <span class="form-group"><label class="small" for="inputVar1">pressure_air_supply</label><input class="form-control py-0" id="inputThres1" type="number" value=1 name="variable1" readOnly /></span>
-          <span class="form-group"><label class="small" for="inputVar2">pressure_air_regulated</label><input class="form-control py-0" id="inputThres2" type="number" value=1 name="variable2" readOnly /></span>
-          <span class="form-group"><label class="small" for="inputVar3">pressure_o2_supply</label><input class="form-control py-0" id="inputThres3" type="number" value=1 name="variable3" readOnly /></span>
-          <span class="form-group"><label class="small" for="inputVar4">pressure_o2_regulated</label><input class="form-control py-0" id="inputThres4" type="number" value=1 name="variable4" readOnly /></span>
-          <span class="form-group"><label class="small" for="inputVar4">pressure_buffer</label><input class="form-control py-0" id="inputThres4" type="number" value=1 name="variable4" readOnly /></span>
-          <span class="form-group"><label class="small" for="inputVar4">pressure_inhale</label><input class="form-control py-0" id="inputThres4" type="number" value=1 name="variable4" readOnly /></span>
-          <span class="form-group"><label class="small" for="inputVar4">pressure_patient</label><input class="form-control py-0" id="inputThres4" type="number" value=1 name="variable4" readOnly /></span>
-          <span class="form-group"><label class="small" for="inputVar4">readback_valve_air_in</label><input class="form-control py-0" id="inputThres4" type="number" value=1 name="variable4" readOnly /></span>
-          <span class="form-group"><label class="small" for="inputVar4">readback_valve_02_in</label><input class="form-control py-0" id="inputThres4" type="number" value=1 name="variable4" readOnly /></span>
-          <span class="form-group"><label class="small" for="inputVar5">readback_valve_out</label><input class="form-control py-0" id="inputThres5" type="number" value=1 name="variable5" readOnly /></span>
-          <span class="form-group"><label class="small" for="inputVar6">readback_valve_scavenge</label><input class="form-control py-0" id="inputThres6" type="number" value=1 name="variable6" readOnly /></span>
-          <span class="form-group"><label class="small" for="inputVar6">readback_valve_purge</label><input class="form-control py-0" id="inputThres6" type="number" value=1 name="variable6" readOnly /></span>
-          <span class="form-group"><label class="small" for="inputVar6">readback_mode</label><input class="form-control py-0" id="inputThres6" type="number" value=1 name="variable6" readOnly /></span>
+          <span class="form-group"><label class="small" for="inputVar1">pressure_air_supply</label><input class="form-control py-0" id="pressure_air_supply" type="number" value=1 name="pressure_air_supply" readOnly /></span>
+          <span class="form-group"><label class="small" for="inputVar2">pressure_air_regulated</label><input class="form-control py-0" id="pressure_air_regulated" type="number" value=1 name="variable2" readOnly /></span>
+          <br></br>
+          <span class="form-group"><label class="small" for="inputVar3">pressure_o2_supply</label><input class="form-control py-0" id="pressure_o2_supply" type="number" value=1 name="variable3" readOnly /></span>
+          <span class="form-group"><label class="small" for="inputVar4">pressure_o2_regulated</label><input class="form-control py-0" id="pressure_o2_regulated" type="number" value=1 name="variable4" readOnly /></span>
+          <br></br>
+          <span class="form-group"><label class="small" for="inputVar5">pressure_buffer</label><input class="form-control py-0" id="pressure_buffer" type="number" value=1 name="variable4" readOnly /></span>
+          <span class="form-group"><label class="small" for="inputVar6">pressure_inhale</label><input class="form-control py-0" id="pressure_inhale" type="number" value=1 name="variable4" readOnly /></span>
+          <br></br>
+          <span class="form-group"><label class="small" for="inputVar7">pressure_patient</label><input class="form-control py-0" id="pressure_patient" type="number" value=1 name="variable4" readOnly /></span>
+          <br></br>
+          <span class="form-group"><label class="small" for="inputVar8">readback_valve_air_in</label><input class="form-control py-0" id="readback_valve_air_in" type="number" value=1 name="variable4" readOnly /></span>
+          <span class="form-group"><label class="small" for="inputVar9">readback_valve_02_in</label><input class="form-control py-0" id="readback_valve_02_in" type="number" value=1 name="variable4" readOnly /></span>
+          <br></br>
+          <span class="form-group"><label class="small" for="inputVar10">readback_valve_out</label><input class="form-control py-0" id="readback_valve_out" type="number" value=1 name="variable5" readOnly /></span>
+          <span class="form-group"><label class="small" for="inputVar11">readback_valve_scavenge</label><input class="form-control py-0" id="readback_valve_scavenge" type="number" value=1 name="variable6" readOnly /></span>
+          <br></br>
+          <span class="form-group"><label class="small" for="inputVar12">readback_valve_purge</label><input class="form-control py-0" id="readback_valve_purge" type="number" value=1 name="variable6" readOnly /></span>
+          <span class="form-group"><label class="small" for="inputVar13">readback_mode</label><input class="form-control py-0" id="readback_mode" type="number" value=1 name="variable6" readOnly /></span>
         </div>
       </div>
     </div>
     <div class="row justify-content-center">
-          <span class="form-group"><input class="form-control py-0" id="inputPassword" type="submit" value="Submit Changes" /></span>
+          <span class="form-group" ><input class="form-control py-0" style="background-color: #1f4793 ; color: white" id="inputPassword" type="submit" value="Submit Changes"  /></span>
     </div>
   </form>
 </div>
@@ -74,22 +80,36 @@
   }
   }
   function toggle_lock_thresholds() {
-  if ( document.getElementById("inputThres1").readOnly == true){
-  document.getElementById("inputThres1").readOnly = false;
-  document.getElementById("inputThres2").readOnly = false;
-  document.getElementById("inputThres3").readOnly = false;
-  document.getElementById("inputThres4").readOnly = false;
-  document.getElementById("inputThres5").readOnly = false;
-  document.getElementById("inputThres6").readOnly = false;
+  if ( document.getElementById("pressure_air_supply").readOnly == true){
+  document.getElementById("pressure_air_supply").readOnly = false;
+  document.getElementById("pressure_air_regulated").readOnly = false;
+  document.getElementById("pressure_o2_supply").readOnly = false;
+  document.getElementById("pressure_o2_regulated").readOnly = false;
+  document.getElementById("pressure_buffer").readOnly = false;
+  document.getElementById("pressure_inhale").readOnly = false;
+  document.getElementById("pressure_patient").readOnly = false;
+  document.getElementById("readback_valve_air_in").readOnly = false;
+  document.getElementById("readback_valve_02_in").readOnly = false;
+  document.getElementById("readback_valve_out").readOnly = false;
+  document.getElementById("readback_valve_scavenge").readOnly = false;
+  document.getElementById("readback_valve_purge").readOnly = false;
+  document.getElementById("readback_mode").readOnly = false;
 
   }
   else {
-  document.getElementById("inputThres1").readOnly = true;
-  document.getElementById("inputThres2").readOnly = true;
-  document.getElementById("inputThres3").readOnly = true;
-  document.getElementById("inputThres4").readOnly = true;
-  document.getElementById("inputThres5").readOnly = true;
-  document.getElementById("inputThres6").readOnly = true;
+  document.getElementById("pressure_air_supply").readOnly = true;
+  document.getElementById("pressure_air_regulated").readOnly = true;
+  document.getElementById("pressure_o2_supply").readOnly = true;
+  document.getElementById("pressure_o2_regulated").readOnly = true;
+  document.getElementById("pressure_buffer").readOnly = true;
+  document.getElementById("pressure_inhale").readOnly = true;
+  document.getElementById("pressure_patient").readOnly = true;
+  document.getElementById("readback_valve_air_in").readOnly = true;
+  document.getElementById("readback_valve_02_in").readOnly = true;
+  document.getElementById("readback_valve_out").readOnly = true;
+  document.getElementById("readback_valve_scavenge").readOnly = true;
+  document.getElementById("readback_valve_purge").readOnly = true;
+  document.getElementById("readback_mode").readOnly = true;
   }
   }
 
