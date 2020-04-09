@@ -34,6 +34,7 @@
 // };
 struct dataFormat {
     uint8_t  version = A0; // 
+    uint8_t  size; // in bytes
     uint8_t  fsm_state;
     uint16_t pressure_air_supply;
     uint16_t pressure_air_regulated;
@@ -45,8 +46,8 @@ struct dataFormat {
     uint16_t sys_temperature;
     uint8_t  readback_valve_air_in;
     uint8_t  readback_valve_o2_in;
-    uint8_t  readback_valve_out;
-    uint8_t  readback_valve_scavenge;
+    uint8_t  readback_valve_inhale;
+    uint8_t  readback_valve_exhale;
     uint8_t  readback_valve_purge;
     uint8_t  readback_mode; 
 };

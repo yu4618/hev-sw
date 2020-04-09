@@ -1,4 +1,8 @@
+{% set charts_active = True %}
 {% extends 'base.html' %}
+
+{% block fan_classes %}
+{% endblock %}
 
 {% block content %}
 <main>
@@ -98,4 +102,13 @@
 </div>
 </div>
 </main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function setActiveClass() {
+  var element = document.getElementById("fan-icon");
+  element.classList.add("active");
+}
+</script>
 {% endblock %}
