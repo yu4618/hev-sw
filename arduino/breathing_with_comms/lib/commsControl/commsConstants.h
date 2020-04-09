@@ -26,37 +26,47 @@
 #define PRESSURE_PEEP_LOW  0x01
 #define PRESSURE_PEEP_HIGH 0x02
 
+#define HEV_FORMAT_VERSION 0xA0
+
+enum command_codes {CMD_START = 1, 
+                    CMD_STOP  = 2};
+
 // struct for all data sent
-// TODO: the same for all settings?
-// struct dataFormat {
-//     uint16_t count;
-//     uint16_t pressure;
-// };
+
 struct dataFormat {
-    uint8_t  version = A0; // 
+    uint8_t  version = HEV_FORMAT_VERSION; // 
     uint8_t  size = 27; // in bytes (includes version and size itself)
-    uint8_t  fsm_state;
-    uint16_t pressure_air_supply;
-    uint16_t pressure_air_regulated;
-    uint16_t pressure_o2_supply;
-    uint16_t pressure_o2_regulated;
-    uint16_t pressure_buffer;
-    uint16_t pressure_inhale;
-    uint16_t pressure_patient;
-    uint16_t temperature_buffer;
-    uint16_t pressure_diff_patient;
-    uint8_t  readback_valve_air_in;
-    uint8_t  readback_valve_o2_in;
-    uint8_t  readback_valve_inhale;
-    uint8_t  readback_valve_exhale;
-    uint8_t  readback_valve_purge;
-    uint8_t  readback_mode; 
+    uint8_t  fsm_state = 0;
+    uint16_t pressure_air_supply = 0;
+    uint16_t pressure_air_regulated = 0;
+    uint16_t pressure_o2_supply = 0;
+    uint16_t pressure_o2_regulated = 0;
+    uint16_t pressure_buffer = 0;
+    uint16_t pressure_inhale = 0;
+    uint16_t pressure_patient = 0;
+    uint16_t temperature_buffer = 0;
+    uint16_t pressure_diff_patient = 0;
+    uint8_t  readback_valve_air_in = 0;
+    uint8_t  readback_valve_o2_in = 0;
+    uint8_t  readback_valve_inhale = 0;
+    uint8_t  readback_valve_exhale = 0;
+    uint8_t  readback_valve_purge = 0;
+    uint8_t  readback_mode = 0; 
+};
+
+struct commandFormat {
+    uint8_t  version = HEV_FORMAT_VERSION; // 
+    uint8_t  size    = 7; // in bytes (includes version and size itself)
+    uint8_t  cmdCode = 0;
+    uint32_t  param   = 0;
 };
 
 struct alarmFormat{
-    uint8_t tmp;  // need to define
+    uint8_t  version = HEV_FORMAT_VERSION; // 
+    uint8_t  size    = 7; // in bytes (includes version and size itself)
+    uint8_t  alarmCode = 0;
+    uint32_t param   = 0;
                     // do we do the same as dataFormat and put all alarms in one message?
-
 };
 
 // enum of all transfer types

@@ -50,9 +50,9 @@ void FSM_assignment( ) {
             next_state = BS_INHALE;
             break;
         case BS_INHALE:
-            next_state = BS_WAIT;
+            next_state = BS_PAUSE;
             break;
-        case BS_WAIT:
+        case BS_PAUSE:
             next_state = BS_EXHALE_FILL;
             break;
         case BS_EXHALE_FILL:
@@ -132,7 +132,7 @@ void FSM_breath_cycle()
         timeout =100;
         
         break;
-    case BS_WAIT:
+    case BS_PAUSE:
         setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED);
         timeout =1000;
         

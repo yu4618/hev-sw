@@ -15,7 +15,7 @@ enum BS_STATES : byte
     BS_BUFF_LOADED,
     BS_BUFF_PRE_INHALE,
     BS_INHALE,
-    BS_WAIT,
+    BS_PAUSE,
     BS_EXHALE_FILL,
     BS_EXHALE,
     BS_BUFF_PURGE,
