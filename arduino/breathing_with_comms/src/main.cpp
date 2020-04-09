@@ -91,14 +91,13 @@ void loop()
 
     data.fsm_state = getFsmState();
     data.readback_mode = getLabCycleMode();
-    data.pressure_air_regulated = 0x1234;
-    data.pressure_buffer        = 0xabcd; 
+    data.pressure_buffer = analogRead(pin_p_buffer);
+    data.pressure_inhale = analogRead(pin_p_inhale);
 
     //breath_cycle();
     FSM_assignment();
     FSM_breath_cycle();
    
-
     comms.registerData(dataNormal, &data);
     // per cycle sender
     comms.sender();
