@@ -48,8 +48,10 @@ class commsControl():
         receivingWorker.start()
         
         self.sending_ = True
-        receivingWorker = threading.Thread(target=self.sender, daemon=True)
-        receivingWorker.start()
+        self._datavalid = threading.Event()  # callback for send process
+        self._dvlock = threading.Lock()      # make callback threadsafe
+        sendingWorker = threading.Thread(target=self.sender, daemon=True)
+        sendingWorker.start()
     
     # open serial port
     def openSerial(self, port, baudrate = 115200, timeout = 2):
@@ -64,12 +66,15 @@ class commsControl():
         
     def sender(self):
         while self.sending_:
+            self._datavalid.wait()
             if not self.serial_ is None:
                 if not self.serial_.in_waiting > 0:
                     self.sendQueue(self.alarms_  ,  10)
                     self.sendQueue(self.commands_,  50)
                     self.sendQueue(self.data_    , 200)
-    
+            with self._dvlock:
+                self._datavalid.clear()
+
     def receiver(self):
         while self.receiving_:
             if not self.serial_ is None:
@@ -86,7 +91,9 @@ class commsControl():
                 with self.lock_:
                     self.timeLastTransmission_ = currentTime
                     queue[0].setSequenceSend(self.sequenceSend_)
-                    self.sendPacket(queue[0])
+                    packet = queue.popleft()
+                    self.sendPacket(packet)
+                    logging.debug(f"Sent packet: {packet}")
                     
     def getQueue(self, packetFlag):
         if   packetFlag == 0xC0:
@@ -146,6 +153,8 @@ class commsControl():
         tmpData = commsFormat.commsDATA()
         tmpData.setInformation(value)
         self.data_.append(tmpData)
+        with self._dvlock:
+            self._datavalid.set()
         
     def sendPacket(self, comms):
         logging.debug("Sending data...")
@@ -191,6 +200,7 @@ class commsControl():
             return result
         except:
             return None
+
     # callback to dependants to read the received payload
     @property
     def payloadrecv(self):
@@ -199,7 +209,7 @@ class commsControl():
     @payloadrecv.setter
     def payloadrecv(self, payload):
         self._payloadrecv.append(payload)
-        logging.info(f"Pushed {payload} to FIFO")
+        logging.debug(f"Pushed {payload} to FIFO")
         for callback in self._observers:
             # peek at the leftmost item, don't pop until receipt confirmed
             callback(self._payloadrecv[0])
@@ -210,7 +220,7 @@ class commsControl():
     def pop_payloadrecv(self):
         # from callback. confirmed receipt, pop value
         poppedval = self._payloadrecv.popleft()
-        logging.info(f"Popped {poppedval} from FIFO")
+        logging.debug(f"Popped {poppedval} from FIFO")
         if len(self._payloadrecv) > 0:
             # purge full queue if Dependant goes down when it comes back up
             for callback in self._observers:
@@ -229,6 +239,7 @@ if __name__ == "__main__" :
             self._llipacket = payload
             # pop from queue - protects against Dependant going down and not receiving packets
             self._lli.pop_payloadrecv()
+
     # get port number for arduino, mostly for debugging
     for port in list_ports.comports():
         try:
@@ -242,9 +253,12 @@ if __name__ == "__main__" :
 
     commsCtrl.payloadrecv = "testpacket1"
     commsCtrl.payloadrecv = "testpacket2"
+
     LEDs = [3,5,7]
+    for _ in range(30):
+        for led in LEDs:
+            commsCtrl.registerData(led)
+        time.sleep(5)
+
     while True:
         pass
-#         for led in LEDs:
-#             commsCtrl.registerData(led)
-#         time.sleep(5)
