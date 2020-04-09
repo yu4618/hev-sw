@@ -9,6 +9,7 @@ from serial.tools import list_ports
 import time
 
 import commsFormat
+from commsConstants import dataFormat
 from collections import deque
 import logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -22,12 +23,14 @@ class commsControl():
         self.serial_ = None
         self.openSerial(port, baudrate)
 
-        # queues are FIFO ring-buffers of the defined size
+        # send queues are FIFO ring-buffers of the defined size
         self.alarms_   = deque(maxlen = queueSize)
         self.commands_ = deque(maxlen = queueSize)
         self.data_     = deque(maxlen = queueSize)
         
-        # TODO add received deque and callback / access to it
+        # received queue and observers to be notified on update
+        self._payloadrecv = deque(maxlen = queueSize)
+        self._observers = []
         
         # needed to find packet frames
         self.received_ = []
@@ -59,7 +62,6 @@ class commsControl():
                 logging.warning("warning: device not open")
             self.serial_ = None
         
-    # have yet to figure out how to call this automatically
     def sender(self):
         while self.sending_:
             if not self.serial_ is None:
@@ -125,7 +127,11 @@ class commsControl():
                             # received ACK
                             self.finishPacket(tmpQueue)
                         else:
-                            # for now just confirm data
+                            # decode data
+                            payload = tmpComms.getData()
+                            # append to array
+                            self.payloadrecv = dataFormat(payload)
+                            # send ack
                             logging.debug("Preparing ACK")
                             commsResponse = commsFormat.commsACK(address = decoded[1])
                             commsResponse.setSequenceReceive((decoded[3] >> 1) + 1)
@@ -185,8 +191,44 @@ class commsControl():
             return result
         except:
             return None
+    # callback to dependants to read the received payload
+    @property
+    def payloadrecv(self):
+        return self._payloadrecv
+
+    @payloadrecv.setter
+    def payloadrecv(self, payload):
+        self._payloadrecv.append(payload)
+        logging.info(f"Pushed {payload} to FIFO")
+        for callback in self._observers:
+            # peek at the leftmost item, don't pop until receipt confirmed
+            callback(self._payloadrecv[0])
+
+    def bind_to(self, callback):
+        self._observers.append(callback)
+
+    def pop_payloadrecv(self):
+        # from callback. confirmed receipt, pop value
+        poppedval = self._payloadrecv.popleft()
+        logging.info(f"Popped {poppedval} from FIFO")
+        if len(self._payloadrecv) > 0:
+            # purge full queue if Dependant goes down when it comes back up
+            for callback in self._observers:
+                callback(self._payloadrecv[0])
         
 if __name__ == "__main__" :
+    # example dependant
+    class Dependant(object):
+        def __init__(self, lli):
+            self._llipacket = None
+            self._lli = lli
+            self._lli.bind_to(self.update_llipacket)
+
+        def update_llipacket(self, payload):
+            logging.debug(f"payload received: {payload!r}")
+            self._llipacket = payload
+            # pop from queue - protects against Dependant going down and not receiving packets
+            self._lli.pop_payloadrecv()
     # get port number for arduino, mostly for debugging
     for port in list_ports.comports():
         try:
@@ -196,6 +238,10 @@ if __name__ == "__main__" :
             pass
 
     commsCtrl = commsControl(port = port)
+    example = Dependant(commsCtrl)
+
+    commsCtrl.payloadrecv = "testpacket1"
+    commsCtrl.payloadrecv = "testpacket2"
     LEDs = [3,5,7]
     while True:
         pass

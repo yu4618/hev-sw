@@ -9,9 +9,9 @@ class dataFormat():
         # < = little endian
         # > = big endian
         # ! = network format (big endian)
-        dataStruct = Struct("!BBBHHHHHHHHHBBBBBB")
-        self.rpi_version = 0xA0;
+        self.dataStruct = Struct("!BBBHHHHHHHHHBBBBBB")
         self.byteArray = byteArray
+        self.rpi_version = 0xA0
 
         # make all zero to start with
         self.version = 0
@@ -33,7 +33,7 @@ class dataFormat():
         self.readback_valve_purge = 0
         self.readback_mode = 0
 
-    def unpack():
+    def unpack(self):
         (self.version,
         self.size,
         self.fsm_state,
@@ -51,7 +51,7 @@ class dataFormat():
         self.readback_valve_inhale,
         self.readback_valve_exhale,
         self.readback_valve_purge,
-        self.readback_mode) = dataStruct.unpack(byteArray) 
+        self.readback_mode) = self.dataStruct.unpack(self.byteArray) 
 
     def checkversion(self):
         if self.rpi_version == self.version :
