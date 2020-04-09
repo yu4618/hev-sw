@@ -30,7 +30,7 @@ void FSM_assignment( ) {
             {
                 next_state = BS_BUFF_PREFILL;
                 FSM_time = millis();
-                Serial.println("Exit IDLE") ;
+                // Serial.println("Exit IDLE") ;
             }
             else
             {
@@ -108,11 +108,11 @@ void FSM_breath_cycle()
         break;
     case BS_BUFF_PREFILL:
         setValves(V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED);
-        timeout = 1000;
+        timeout = 100;
         break;
     case BS_BUFF_FILL:
         setValves(V_OPEN, V_CLOSED, V_OPEN, V_CLOSED);
-        timeout = 500;
+        timeout = 1200;
         
         break;
     case BS_BUFF_LOADED:
@@ -120,7 +120,7 @@ void FSM_breath_cycle()
         switch (lab_cycle_mode)
         {
         case LAB_MODE_FLUSH:
-            timeout = 500;
+            timeout = 100;
             
             break;
         case LAB_MODE_PURGE:
@@ -134,27 +134,27 @@ void FSM_breath_cycle()
         break;
     case BS_BUFF_PRE_INHALE:
         setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED);
-        timeout =100;
+        timeout = 100;
        
         break;
     case BS_INHALE:
         setValves(V_CLOSED, V_OPEN, V_CLOSED, V_CLOSED);
-        timeout =100;
+        timeout =1600;
         
         break;
     case BS_WAIT:
         setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED);
-        timeout =1000;
+        timeout = 200;
         
         break;
     case BS_EXHALE_FILL:
         setValves(V_OPEN, V_CLOSED, V_OPEN, V_CLOSED);
-        timeout =1000;
+        timeout =1200;
        
         break;
     case BS_EXHALE:
         setValves(V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED);
-        timeout =10;
+        timeout = 400;
         
         break;
     case BS_BUFF_PURGE:
@@ -168,6 +168,6 @@ void FSM_breath_cycle()
     
 
     }
- Serial.println("state FSM_breath_cycle: " + String(bs_state));
- Serial.println("start: " + String(start));
+//  Serial.println("state FSM_breath_cycle: " + String(bs_state));
+//  Serial.println("start: " + String(start));
 }
