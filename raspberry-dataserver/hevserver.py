@@ -5,53 +5,60 @@
 
 import asyncio
 import json
-import svpi
 import time
 import threading
 import argparse
+import svpi
+import commsControl
+from serial.tools import list_ports
 from typing import List
 import logging
-logging.basicConfig(level=logging.INFO,
-                    format='hevserver %(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class HEVServer(object):
-    def __init__(self):
-        self._alarms = []
+    def __init__(self, lli):
+        self._alarms = ''
         self._values = []
-        self._settings = []
-        self._polling = True
-        self._broadcasting_period = 1
-        self._broadcasting = True
-        self._lock = threading.Lock()  # lock for the database
+        self._thresholds = []
+        self._dblock = threading.Lock()  # make db threadsafe
         self._generator = svpi.svpi()
+        self._lli = lli
+        self._lli.bind_to(self.polling)
 
-        # start worker thread to update values in background
-        worker = threading.Thread(target=self.polling, daemon=True)
+        self._broadcasting = True
+        self._datavalid = None           # something has been received from arduino. placeholder for asyncio.Event()
+        self._dvlock = threading.Lock()  # make datavalid threadsafe
+        self._dvlock.acquire()           # come up locked to wait for loop
+        # start worker thread to send values in background
+        worker = threading.Thread(target=self.serve_all, daemon=True)
         worker.start()
 
     def __repr__(self):
-        with self._lock:
-            return f"alarms: {self._alarms}. sensor values: {self._values}"
+        with self._dblock:
+            return f"Alarms: {self._alarms}.\nSensor values: {self._values}\nSettings: {self._thresholds}"
 
     def set_input_file(self, input_file):
         self._generator.addInputFile(input_file)
         
-    def polling(self) -> None:
-        # get values in the background
-        while self._polling:
-            with self._lock:
-                self._values = self._generator.getValues()
-                self._alarms = self._generator.getAlarms()
-                self._settings = self._generator.getThresholds()
-            time.sleep(self._broadcasting_period)
-
+    def polling(self, payload) -> None:
+        # get values when we get a callback from commsControl (lli)
+        logging.debug(f"Payload received: {payload}")
+        # TODO check what type of broadcast it is
+        with self._dblock:
+            self._alarms = payload
+        with self._dvlock:
+            self._datavalid.set()
+        # only pop from queue now - protects against dataserver going down and not receiving alarms
+        self._lli.pop_payloadrecv()
             
     async def handle_request(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
         # listen for queries on the request socket
         data = await reader.read(300)
         request = json.loads(data.decode("utf-8"))
         addr = writer.get_extra_info("peername")
+        logging.info(f"Answering request from {addr}")
         payload = ""
 
         # three possible queries: set mode, set thresholds or both
@@ -98,21 +105,30 @@ class HEVServer(object):
         logging.info(f"Broadcasting to {addr!r}")
 
         while self._broadcasting:
+            # wait for data from serial port
+            try:
+                await asyncio.wait_for(self._datavalid.wait(), timeout=0.5) # set timeout such that there is never pileup
+            except asyncio.TimeoutError:
+                continue
             # take lock of db and prepare packet
-            with self._lock:
-                payload: List[float] = self._values
-                alarms: List[str] = self._alarms
-            broadcast_packet = f"""{{ "type": "broadcast", "sensors": {payload}, "alarms": {str(alarms).replace("'",'"')} }}"""
+            with self._dblock:
+                sensors: List[float] = self._values
+                alarms: str = self._alarms
+                thresholds: List[float] = self._thresholds
+            broadcast_packet = f"""{{ "type": "broadcast", "sensors": {sensors}, "alarms": "{alarms}", "thresholds": {thresholds}}}"""
             logging.debug(f"Send: {broadcast_packet}")
 
             try:
                 writer.write(broadcast_packet.encode())
                 await writer.drain()
-                await asyncio.sleep(self._broadcasting_period)
             except (ConnectionResetError, BrokenPipeError):
                 # Connection lost, stop trying to broadcast and free up socket
                 logging.warning(f"Connection lost with {addr!r}")
                 self._broadcasting = False
+
+            # take control of datavalid and reset it
+            with self._dvlock:
+                self._datavalid.clear()
 
         self._broadcasting = True
         writer.close()
@@ -123,7 +139,7 @@ class HEVServer(object):
 
         # get address for log
         addr = server.sockets[0].getsockname()
-        logging.info(f"Answering request from {addr}")
+        logging.info(f"Listening for requests on {addr}")
 
         async with server:
             await server.serve_forever()
@@ -140,11 +156,14 @@ class HEVServer(object):
             await server.serve_forever()
 
     async def create_sockets(self) -> None:
+        self._datavalid = asyncio.Event() # initially false
+        self._dvlock.release()
         LOCALHOST = "127.0.0.1"
         b1 = self.serve_broadcast(LOCALHOST, 54320)  # WebUI broadcast
         r1 = self.serve_request(LOCALHOST, 54321)    # joint request socket
-        b2 = self.serve_broadcast(LOCALHOST, 54322)  # NativeUI broadcast
-        tasks = [b1, r1, b2]
+        #b2 = self.serve_broadcast(LOCALHOST, 54322)  # NativeUI broadcast
+        #tasks = [b1, r1, b2]
+        tasks = [b1, r1]
         await asyncio.gather(*tasks, return_exceptions=True)
 
     def serve_all(self) -> None:
@@ -152,12 +171,25 @@ class HEVServer(object):
 
 
 if __name__ == "__main__":
-    #parser to allow us to pass arguments to hevserver
+    # parser to allow us to pass arguments to hevserver
     parser = argparse.ArgumentParser(description='Arguments to run hevserver')
     parser.add_argument('--inputFile', type=str, default = '', help='a test file to load data')
+    parser.add_argument('--randGen', action='store_true', help='use a front end emulator which generates random values')
     args = parser.parse_args()
-    
-    hevsrv = HEVServer()
+
+    # get arduino serial port
+    for port in list_ports.comports():
+        if "ARDUINO" in port.manufacturer.upper():
+            port = port.device 
+
+    # initialise low level interface and dataserver
+    lli = commsControl.commsControl(port=port)
+    hevsrv = HEVServer(lli)
+
+    # check if input file was specified
     if args.inputFile != '':
         hevsrv.set_input_file(args.inputFile)
-    hevsrv.serve_all()
+
+    # serve forever
+    while True:
+        pass

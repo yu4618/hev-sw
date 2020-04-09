@@ -23,7 +23,7 @@ class HEVClient(object):
     def __init__(self):
         self._alarms = []  # db for alarms
         self._values = []  # db for sensor values
-        self._thresholds = []  # db for threshold settings - not implemented
+        self._thresholds = []  # db for threshold settings
         self._polling = True  # keep reading data into db
         self._lock = threading.Lock()  # lock for the database
 
@@ -33,15 +33,17 @@ class HEVClient(object):
 
     async def polling(self) -> None:
         # open persistent connection with server
-        reader, writer = await asyncio.open_connection("127.0.0.1", 54322)
+        reader, writer = await asyncio.open_connection("127.0.0.1", 54320)
 
         # grab data from the socket as soon as it is available and dump it in the db
         while self._polling:
             data = await reader.read(300)
+            logging.info(data)
             data = json.loads(data.decode("utf-8"))
             with self._lock:
                 self._values = data["sensors"]
                 self._alarms = data["alarms"]
+                self._thresholds = data["thresholds"]
 
         # close connection
         writer.close()
