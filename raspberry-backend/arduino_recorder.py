@@ -117,7 +117,7 @@ def progress(status, remaining, total):
 
 
 def db_backup(backup_time):
-    threading.Timer(backup_time, db_backup).start()
+    threading.Timer(backup_time, db_backup, [backup_time]).start()
     print("Executing DB backup")
     try:
         # Existing DB
