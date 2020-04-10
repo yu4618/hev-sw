@@ -79,18 +79,34 @@ void commsFormat::generateCrc(bool assign) {
 }
 
 // assign received information to packet
-// TODO: set according to TBD dataFormat
-void commsFormat::setInformation(dataFormat* values) {
-    // assign values to
-    memcpy(getInformation(), &values->count, 2);
-
-    generateCrc();
+void commsFormat::setInformation(payload *pl) {
+    assignBytes(getInformation(), reinterpret_cast<uint8_t*>(pl->getInformation()), getInfoSize());
 }
 
 void commsFormat::copyData(uint8_t* data, uint8_t dataSize) {
-    infoSize_ = dataSize - CONST_MIN_SIZE_PACKET;
     packetSize_ = dataSize;
-    memset(data_,    0, sizeof(data_));
+    infoSize_ = dataSize - CONST_MIN_SIZE_PACKET;
+    memset(getData(),    0, sizeof(data_));
 
     assignBytes(getData(), data, dataSize);
 }
+
+
+// STATIC METHODS
+// TODO rewrite in a slightly better way using the enum
+commsFormat* commsFormat::generateALARM(payload *pl) {
+    commsFormat *tmpComms = new commsFormat(pl->getInformationSize(), PACKET_ALARM);
+    tmpComms->setInformation(pl);
+    return tmpComms;
+}
+commsFormat* commsFormat::generateCMD  (payload *pl) {
+    commsFormat *tmpComms = new commsFormat(pl->getInformationSize(), PACKET_CMD  );
+    tmpComms->setInformation(pl);
+    return tmpComms;
+}
+commsFormat* commsFormat::generateDATA (payload *pl) {
+    commsFormat *tmpComms = new commsFormat(pl->getInformationSize(), PACKET_DATA );
+    tmpComms->setInformation(pl);
+    return tmpComms;
+}
+

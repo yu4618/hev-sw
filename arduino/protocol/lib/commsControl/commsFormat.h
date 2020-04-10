@@ -20,7 +20,7 @@ public:
 
     void setAddress(uint8_t* address) {assignBytes(getAddress(), address, 1); }
     void setControl(uint8_t* control) {assignBytes(getControl(), control, 2); }
-    void setInformation(dataFormat* values);
+    void setInformation(payload *pl);
 
     void assignBytes(uint8_t* target, uint8_t* source, uint8_t size, bool calcCrc = true);
 
@@ -35,6 +35,7 @@ public:
     uint8_t* getFcs()         {return data_ + 4 + infoSize_;}             // checksum
     uint8_t* getStop()        {return data_ + 4 + infoSize_ + 2;}         // ending flag of the chain
 
+    uint8_t getInfoSize() { return infoSize_; }
 
     void setSequenceSend   (uint8_t counter);
     void setSequenceReceive(uint8_t counter);
@@ -42,14 +43,14 @@ public:
     uint8_t getSequenceSend   ();
     uint8_t getSequenceReceive();
 
-    void copyData(uint8_t* data, uint8_t dataSize);
+    void copyData(uint8_t* payload, uint8_t dataSize);
 
     static commsFormat* generateACK()   { return new commsFormat(0, 0, COMMS_CONTROL_ACK  << 8); }
     static commsFormat* generateNACK()  { return new commsFormat(0, 0, COMMS_CONTROL_NACK << 8); }
 
-    static commsFormat* generateALARM() { return new commsFormat(4, PACKET_ALARM); }
-    static commsFormat* generateCMD()   { return new commsFormat(8, PACKET_CMD  ); }
-    static commsFormat* generateDATA()  { return new commsFormat(8, PACKET_DATA ); }
+    static commsFormat* generateALARM(payload *pl);
+    static commsFormat* generateCMD  (payload *pl);
+    static commsFormat* generateDATA (payload *pl);
 
 private:
     uint8_t  data_[CONST_MAX_SIZE_PACKET];
