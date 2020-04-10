@@ -2,6 +2,7 @@ from commsControl import commsControl
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 import sys
+import time
 
 comms = commsControl(port = sys.argv[1])
 
@@ -20,11 +21,13 @@ class Dependant(object):
 
 dep = Dependant(comms)
 
-start = 0x1 
-stop = 0x2
+start = 0x1
+stop =  0x2
 
-comms.registerData(1)
+#comms.registerData(start)
 # comms.sender()
 while True:
+    time.sleep(30)
+    #comms.registerData(stop)
     pass
 
