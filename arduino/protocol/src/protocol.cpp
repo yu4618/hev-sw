@@ -7,8 +7,10 @@
 
 #define BTN 8
 
-dataFormat data;
-commsControl comms;
+payload plReceive_;
+payload plSend_;
+commsControl comms_;
+dataFormat data_;
 
 int currentState  = 0;
 int previousState = 0;
@@ -17,6 +19,7 @@ int led = 0;
 bool blue = false;
 bool green = false;
 bool red = false;
+
 
 // dirty function to switch one of the LEDs
 void switchLED(int led) {
@@ -43,6 +46,8 @@ void switchLED(int led) {
 
 
 void setup() {
+  plSend_.setType(payloadType::payloadData);
+
   // initialize digital pin LED_BUILTIN as an output.
   pinMode(LED_BLUE, OUTPUT);
   pinMode(LED_GREEN, OUTPUT);
@@ -51,8 +56,7 @@ void setup() {
   pinMode(BTN, INPUT);
 
   // initialize comms connection
-  comms.beginSerial();
-  data.count = 0;
+  comms_.beginSerial();
 }
 
 void loop() {
@@ -64,15 +68,25 @@ void loop() {
     if (currentState != HIGH) {
       switchLED(LED_BLUE);
       // counter increase on button press
-      data.count += 62;
+      data_.count += 1;
+      plSend_.setData(&data_);
       // register new data in comms
-      comms.registerData(dataNormal, &data);
+      comms_.writePayload(&plSend_);
     }
     previousState = currentState;
   }
 
   // per cycle sender
-  comms.sender();
+  comms_.sender();
   // per cycle receiver
-  comms.receiver();
+  comms_.receiver();
+
+  // per cycle data checker - the received entry is automatically removed from the buffer
+  if (comms_.readPayload(&plReceive_)) {
+      if (plReceive_.getType() == payloadType::payloadData) {
+          switchLED(plReceive_.getData()->count);
+          plReceive_.setType(payloadType::payloadUnset);
+      }
+  }
+
 }
