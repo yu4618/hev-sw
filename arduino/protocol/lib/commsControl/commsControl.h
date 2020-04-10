@@ -19,22 +19,23 @@ public:
 
     void beginSerial();
 
-    // TODO: passed as struct, or simply array of size and memcpy? should be dataType or just define?
-    void registerData(dataType type, dataFormat* values);
+    bool writePayload(payload *pl);
+    bool readPayload (payload *pl);
 
     void sender();
     void receiver();
 
 private:
-    RingBuf<commsFormat *,CONST_MAX_SIZE_QUEUE> *getQueue(uint8_t address);
+    RingBuf<commsFormat *,CONST_MAX_SIZE_RB_SENDING> *getQueue(payloadType *type);
+    payloadType getInfoType(uint8_t *address);
 
-    void sendQueue    (RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue);
-    void resendPacket (RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue);
-    void receivePacket(RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue);
-    void finishPacket (RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queue);
+    void sendQueue    (RingBuf<commsFormat *, CONST_MAX_SIZE_RB_SENDING> *queue);
+    void resendPacket (RingBuf<commsFormat *, CONST_MAX_SIZE_RB_SENDING> *queue);
+    bool receivePacket(payloadType *type);
+    void finishPacket (payloadType *type);
 
-    bool encoder(uint8_t* data, uint8_t dataSize);
-    bool decoder(uint8_t* data, uint8_t dataStart, uint8_t dataStop);
+    bool encoder(uint8_t* payload, uint8_t dataSize);
+    bool decoder(uint8_t* payload, uint8_t dataStart, uint8_t dataStop);
 
     void sendPacket(commsFormat* packet);
 
@@ -45,9 +46,11 @@ private:
     commsFormat* commsAck_;
     commsFormat* commsNck_;
 
-    RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queueAlarm_;
-    RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queueData_;
-    RingBuf<commsFormat *, CONST_MAX_SIZE_QUEUE> *queueCmd_;
+    RingBuf<commsFormat *, CONST_MAX_SIZE_RB_SENDING> *queueAlarm_;
+    RingBuf<commsFormat *, CONST_MAX_SIZE_RB_SENDING> *queueData_;
+    RingBuf<commsFormat *, CONST_MAX_SIZE_RB_SENDING> *queueCmd_;
+
+    RingBuf<payload *, CONST_MAX_SIZE_RB_RECEIVING> *queueReceived_;
 
     commsFormat commsTmp_;
 
