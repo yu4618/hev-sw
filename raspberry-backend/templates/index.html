@@ -6,6 +6,15 @@
 
 {% block content %}
 <main>
+<select id='chart_variables' multiple>
+        <option value='temperature' selected>temperature</option>
+        <option value='pressure' selected>pressure</option>
+        <option value='variable3' selected>variable3</option>
+        <option value='variable4' selected>variable4</option>
+        <option value='variable5' selected>variable5</option>
+        <input type="button" value="Submit" onclick="updateChartType()">
+</select>
+
   <div class="container-fluid">
     <!--<h1 class="mt-4">Info</h1> !-->
     <div class = "row">
