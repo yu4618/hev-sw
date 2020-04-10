@@ -76,14 +76,47 @@
             <div class="card-body px-1 py-3"><span class = "reading-main" id = "variable6">000.00</span> Pa</div>
 	  </div>
 	</div>
+
+	
+	<div class="row no-gutters">
+	    <form action="{{ url_for('data_handler') }}" method="post">
+	      <div class="card rounded-lg w-100 br-red small">
+		<div class="card-header px-1 py-1 align-items-center justify-content-between">
+		  Thresholds
+		  <div class = "float-right"><a class="unlock thresholds" id="toggle_thresholds" onclick="toggle_lock_thresholds()">
+		      <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="lock" class="svg-inline--fa fa-lock fa-w-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+			<path class="path-icon" d="M400 224h-24v-72C376 68.2 307.8 0 224 0S72 68.2 72 152v72H48c-26.5 0-48 21.5-48 48v192c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V272c0-26.5-21.5-48-48-48zm-104 0H152v-72c0-39.7 32.3-72 72-72s72 32.3 72 72v72z"></path>
+		      </svg>
+		    </a>
+		  </div>
+		</div>
+		<div class="card-body px-1 py-1">
+		  <span class=""><label class="small" for="inputThres1">Inhale Time:</label><input class="form-control px-0" id="inputThres1" type="number" value=1 max=100 min=0 name="" readOnly /></span>
+		  <span class="form-group"><label class="small" for="inputVar1">Fill Time:</label><input class="form-control px-0 py-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max = 100 /></span>
+		  <span class="form-group"><label class="small" for="inputVar1">Pause:</label><input class="form-control px-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max=100 /></span>
+		  <br>
+		
+		  <span class=""><label class="small" for="inputThres1">Exhale/Inhale</label><input class="form-control px-0" id="inputThres1" type="number" value=1 max=100 min=0 name="" readOnly /></span>
+		  <span class="form-group"><label class="small" for="inputVar1">PEEP:</label><input class="form-control px-0 py-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max = 100 /></span>
+		  <span class="form-group"><label class="small" for="inputVar1">Inhale Time:</label><input class="form-control px-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max=100 /></span>
+		  <span class="form-group"><label class="small" for="inputVar1">RPM:</label><input class="form-control px-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max=100 /></span>
+		  
+		</div>
+		<div class="card-footer px-0 py-0 align-items-center justify-content-between">
+		<span class="form-group"><input class="form-control py-0" id="inputPassword" type="submit" value="Submit Changes" /></span>
+		</div>
+	    </form>
+	  </div>
+	</div>
+	
 	<div class = "row">
 	  <div class="col-xl-4 px-1 py-0 col-md-5">
-	    <div class = "card">
-	      <a> <button class="sb-control-button py-3 card">INHALE</button></a>
-	    </div>
-	    <div class="card">
-	      <a> <button class="sb-control-button py-1 card">EXHALE</button></a>
+	    <div class = "rounded-lg">
+	      <a> <button class="sb-control-button py-3 rounded-lg">INHALE</button></a>
 	      </div>
+	    <div class="card rounded-lg float-right">
+	      <a> <button class="sb-control-button py-1 rounded-lg">EXHALE</button></a>
+	    </div>
 	  </div>
 	</div>
 	</div>
