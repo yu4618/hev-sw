@@ -76,17 +76,16 @@ function requestDataVar3() {
 
 
 $(document).ready(function() {
-    var ctx = document.getElementById('variable1');
+    var ctx = document.getElementById('pressure_air_supply');
     chart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: [],
             datasets: [{ 
                 data: [],
-                label: "Var1",
+                label: "pressure_air_supply",
                 borderColor: "#3e95cd",
                 fill: false,
-		lineTension: 0
               } 
             ]
           },
@@ -129,7 +128,6 @@ $(document).ready(function() {
                 label: "Var2",
                 borderColor: "#3e95cd",
                 fill: false,
-		lineTension: 0
               } 
             ]
           },
@@ -179,7 +177,6 @@ $(document).ready(function() {
                 label: "Var3",
                 borderColor: "#3e95cd",
                 fill: false,
-		lineTension: 0
               } 
             ]
           },

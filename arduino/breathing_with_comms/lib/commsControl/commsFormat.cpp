@@ -1,7 +1,7 @@
 #include "commsFormat.h"
 
 // constructor to init variables
-commsFormat::commsFormat(uint8_t infoSize) {
+commsFormat::commsFormat(uint8_t infoSize, uint8_t address, uint16_t control) {
     memset(data_, 0, sizeof(data_));
 
     infoSize_   = infoSize;
@@ -10,10 +10,21 @@ commsFormat::commsFormat(uint8_t infoSize) {
         return;
     }
 
+    assignBytes(getAddress(), &address, 1, false);
+    assignBytes(getControl(), reinterpret_cast<uint8_t*>(&control), 2, false);
+
     // hardcoded defaults
     *getStart()   = COMMS_FRAME_BOUNDARY; // fixed start flag
-    *getAddress() = 0xFF; // 0xFF means sending to all devices
     *getStop()    = COMMS_FRAME_BOUNDARY; // fixed stop flag
+
+    generateCrc();
+}
+
+void commsFormat::assignBytes(uint8_t* target, uint8_t* source, uint8_t size, bool calcCrc) {
+    memcpy(target, source, size);
+    if (calcCrc) {
+        generateCrc();
+    }
 }
 
 void commsFormat::setCounter(uint8_t counter) {
@@ -27,7 +38,7 @@ bool commsFormat::compareCrc() {
 
     // get crc from fcs
     uint16_t tmpFcs;
-    memcpy(&tmpFcs, getFcs(), 2);
+    assignBytes(reinterpret_cast<uint8_t*>(&tmpFcs), getFcs(), 2, false);
 
     // return comparison
     return tmpFcs == crc_;
@@ -40,7 +51,8 @@ void commsFormat::generateCrc(bool assign) {
 
     // assign crc to fcs
     if (assign) {
-        memcpy(getFcs(), &crc_, 2);
+        ;
+        assignBytes(getFcs(), reinterpret_cast<uint8_t*>(&crc_), 2, false);
     }
 }
 
@@ -48,12 +60,14 @@ void commsFormat::generateCrc(bool assign) {
 // TODO: set according to TBD dataFormat
 void commsFormat::setInformation(dataFormat* values) {
     // assign values to
-    memcpy(getInformation(), &values->count, 2);
+    // memcpy(getInformation(), &values->count, 2);
+    memcpy(getInformation(), values, sizeof(struct dataFormat));
 }
 
 void commsFormat::copyData(uint8_t* data, uint8_t dataSize) {
     infoSize_ = dataSize - CONST_MIN_SIZE_PACKET;
     packetSize_ = dataSize;
     memset(data_,    0, sizeof(data_));
-    memcpy(data_, data,     dataSize );
+
+    assignBytes(getData(), data, dataSize);
 }

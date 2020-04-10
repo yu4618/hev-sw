@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
-
+byte getLabCycleMode();
+byte getFsmState();
 void FSM_assignment();
 void FSM_breath_cycle();
 

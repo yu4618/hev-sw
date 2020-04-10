@@ -1,4 +1,8 @@
+{% set charts_active = True %}
 {% extends 'base.html' %}
+
+{% block fan_classes %}
+{% endblock %}
 
 {% block content %}
 <main>
@@ -10,7 +14,7 @@
           <div class="col-md-12">
             <div class="card mb-6">
               <div class="card-chart-header small ">Variable number 1</div>
-              <div class="card-body px-0 py-0"><canvas id="variable1" width="200%" height="50"></canvas></div>
+              <div class="card-body px-0 py-0"><canvas id="pressure_air_supply" width="200%" height="40"></canvas></div>
             </div>
           </div>
 	</div>
@@ -18,7 +22,7 @@
           <div class="col-md-12">
             <div class="card mb-6 px-0 py-0">
               <div class="card-chart-header small"></i>Variable number 2</div>
-<div class="card-body px-0 py-0"><canvas id="variable2" width="200%" height="50"></canvas></div>
+<div class="card-body px-0 py-0"><canvas id="variable2" width="200%" height="40"></canvas></div>
 </div>
 </div>
 </div>
@@ -26,7 +30,7 @@
   <div class="col-md-12">
     <div class="card mb-6 px-0 py-0">
       <div class="card-chart-header small ">Variable number 3</div>
-      <div class="card-body px-0 py-0"><canvas id="chart_variable3" width="200%" height="50"></canvas></div>
+      <div class="card-body px-0 py-0"><canvas id="chart_variable3" width="200%" height="40"></canvas></div>
     </div>
   </div>
 </div>
@@ -98,4 +102,13 @@
 </div>
 </div>
 </main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function setActiveClass() {
+  var element = document.getElementById("fan-icon");
+  element.classList.add("active");
+}
+</script>
 {% endblock %}
