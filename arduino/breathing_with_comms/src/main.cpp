@@ -15,6 +15,14 @@ float pause_time = 1.0;       // range?
 float expiratory_minute_volume; // calc?? same as inspiratory_minute_volume?
 float trigger_sensitivity;
 
+// comms
+dataFormat data;
+commsControl comms;
+payload plReceive;
+payload plSend;
+
+bool start_fsm = false;
+
 // calculations
 float calc_tidal_volume()
 {
@@ -47,8 +55,6 @@ float calc_expiratory_minute_volume()
 // PEEP setting ??? external
 // Trigger sensitivity to patient initiated breath
 
-dataFormat data;
-commsControl comms;
 
 void setup()
 {
@@ -85,7 +91,6 @@ void setup()
 
 void loop()
 {
-
     // buzzer
     // tone(pin, freq (Hz), duration);
 
@@ -94,15 +99,42 @@ void loop()
     data.pressure_buffer = analogRead(pin_p_buffer);
     data.pressure_inhale = analogRead(pin_p_inhale);
 
+    bool vin_air, vin_o2, vinhale, vexhale, vpurge;
+    getValves(vin_air, vin_o2, vinhale, vexhale, vpurge);
+    data.readback_valve_air_in = vin_air;
+    data.readback_valve_o2_in = vin_o2;
+    data.readback_valve_inhale = vinhale;
+    data.readback_valve_exhale = vexhale;
+    data.readback_valve_purge = vpurge;
+
     //breath_cycle();
     FSM_assignment();
     FSM_breath_cycle();
-   
-    comms.registerData(dataNormal, &data);
+
+    plSend.setType(payloadType::payloadData);
+    plSend.setData(&data);
+    comms.writePayload(&plSend);
     // per cycle sender
     comms.sender();
     // per cycle receiver
     comms.receiver();
 
+    uint8_t cmdCode = 0;
+    if(comms.readPayload(&plReceive)){
+      if (plReceive.getType() == payloadType::payloadCmd) {
+          cmdCode = (plReceive.getCmd()->cmdCode);
+          plReceive.setType(payloadType::payloadUnset);
+      }
+
+    }
+
+    switch(cmdCode){
+        case 0x1 : do_start(); 
+        break;
+        case 0x2 : do_stop(); 
+        break;
+        default:
+        break;
+    }
     delay(10);
 }

@@ -12,7 +12,7 @@ import commsFormat
 from commsConstants import dataFormat
 from collections import deque
 import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 import threading
 
@@ -111,6 +111,7 @@ class commsControl():
             # TODO: this could be written in more pythonic way
             # force read byte by byte
             self.received_.append(byte)
+            logging.debug(byte)
             if not self.foundStart_ and byte == bytes([0x7E]):
                 self.foundStart_    = True
                 self.receivedStart_ = len(self.received_)
@@ -135,9 +136,11 @@ class commsControl():
                             self.finishPacket(tmpQueue)
                         else:
                             # decode data
-                            payload = tmpComms.getData()
+                            payload = tmpComms.getData()[tmpComms.getInformation() : tmpComms.getFcs()]
                             # append to array
-                            self.payloadrecv = dataFormat(payload)
+                            df = dataFormat()
+                            df.fromByteArray(payload)
+                            self.payloadrecv = df
                             # send ack
                             logging.debug("Preparing ACK")
                             commsResponse = commsFormat.commsACK(address = decoded[1])

@@ -37,5 +37,6 @@ enum valve_states : bool
     V_CLOSED = HIGH
 };
 
-void setValves(bool vin, bool vout, bool vscav, bool vpurge);
+void setValves(bool vin_air, bool vin_o2, bool vinhale, bool vexhale, bool vpurge);
+void getValves(bool &vin_air, bool &vin_o2, bool &vinhale, bool &vexhale, bool &vpurge);
 

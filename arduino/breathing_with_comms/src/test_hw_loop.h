@@ -4,7 +4,8 @@ byte getLabCycleMode();
 byte getFsmState();
 void FSM_assignment();
 void FSM_breath_cycle();
-
+void do_start();
+void do_stop();
 
 // states
 enum BS_STATES : byte
