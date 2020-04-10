@@ -61,6 +61,28 @@ class dataFormat(BaseFormat):
         self.readback_valve_exhale = 0
         self.readback_valve_purge = 0
         self.readback_mode = 0
+
+    def __repr__(self):
+        return f"""{{
+    "version"                : {self.version},
+    "size"                   : {self.size},
+    "fsm_state"              : {self.fsm_state},
+    "pressure_air_supply"    : {self.pressure_air_supply},
+    "pressure_air_regulated" : {self.pressure_air_regulated},
+    "pressure_o2_supply"     : {self.pressure_o2_supply},
+    "pressure_o2_regulated"  : {self.pressure_o2_regulated},
+    "pressure_buffer"        : {self.pressure_buffer},
+    "pressure_inhale"        : {self.pressure_inhale},
+    "pressure_patient"       : {self.pressure_patient},
+    "temperature_buffer"     : {self.temperature_buffer},
+    "pressure_diff_patient"  : {self.pressure_diff_patient},
+    "readback_valve_air_in"  : {self.readback_valve_air_in},
+    "readback_valve_o2_in"   : {self.readback_valve_o2_in},
+    "readback_valve_inhale"  : {self.readback_valve_inhale},
+    "readback_valve_exhale"  : {self.readback_valve_exhale},
+    "readback_valve_purge"   : {self.readback_valve_purge},
+    "readback_mode"          : {self.readback_mode}
+}}"""
         
     # for receiving dataFormat from microcontroller
     # fill the struct from a byteArray, 
@@ -115,6 +137,28 @@ class dataFormat(BaseFormat):
             self.readback_mode
         ) 
 
+    def getDict(self):
+        data = {
+            "version"                : self.version,
+            "size"                   : self.size,
+            "fsm_state"              : self.fsm_state,
+            "pressure_air_supply"    : self.pressure_air_supply,
+            "pressure_air_regulated" : self.pressure_air_regulated,
+            "pressure_o2_supply"     : self.pressure_o2_supply,
+            "pressure_o2_regulated"  : self.pressure_o2_regulated,
+            "pressure_buffer"        : self.pressure_buffer,
+            "pressure_inhale"        : self.pressure_inhale,
+            "pressure_patient"       : self.pressure_patient,
+            "temperature_buffer"     : self.temperature_buffer,
+            "pressure_diff_patient"  : self.pressure_diff_patient,
+            "readback_valve_air_in"  : self.readback_valve_air_in,
+            "readback_valve_o2_in"   : self.readback_valve_o2_in,
+            "readback_valve_inhale"  : self.readback_valve_inhale,
+            "readback_valve_exhale"  : self.readback_valve_exhale,
+            "readback_valve_purge"   : self.readback_valve_purge,
+            "readback_mode"          : self.readback_mode
+        }
+        return data
 
 class commandFormat(BaseFormat):
     def __init__(self):

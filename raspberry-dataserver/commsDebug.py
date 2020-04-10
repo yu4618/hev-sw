@@ -13,8 +13,8 @@ class Dependant(object):
         self._lli.bind_to(self.update_llipacket)
 
     def update_llipacket(self, payload):
-        logging.info(f"payload received: {payload.fsm_state!r}")
-        self._llipacket = payload
+        logging.info(f"payload received: {payload}")
+        self._llipacket = payload.getDict() # returns a dict
         # pop from queue - protects against Dependant going down and not receiving packets
         self._lli.pop_payloadrecv()
 
