@@ -264,13 +264,16 @@ bool commsControl::receivePacket(payloadType *type) {
     void *tmpInformation = nullptr;
     switch (*type) {
         case payloadType::payloadData:
-            tmpInformation = reinterpret_cast<void*>(new dataFormat);
+            tmpInformation = reinterpret_cast<void*>(tmpPl.getData());
+//            tmpInformation = reinterpret_cast<void*>(new dataFormat);
             break;
         case payloadType::payloadCmd:
-            tmpInformation = reinterpret_cast<void*>(new cmdFormat);
+            tmpInformation = reinterpret_cast<void*>(tmpPl.getCmd());
+//            tmpInformation = reinterpret_cast<void*>(new cmdFormat);
             break;
         case payloadType::payloadAlarm:
-            tmpInformation = reinterpret_cast<void*>(new alarmFormat);
+          tmpInformation = reinterpret_cast<void*>(tmpPl.getAlarm());
+//            tmpInformation = reinterpret_cast<void*>(new alarmFormat);
             break;
         default:
             break;
@@ -286,6 +289,7 @@ bool commsControl::receivePacket(payloadType *type) {
     if (queueReceived_->isFull()) {
         payload tmpPlRm;
         if (queueReceived_->pop(tmpPlRm)) {
+            ;
         }
     }
 

@@ -5,7 +5,7 @@
 <div class="container">
   <form action="{{ url_for('data_handler') }}" method="post">
     <div class="row justify-content-center">
-      <div class="card rounded-lg w-100 px-0 py-0">
+      <div class="card rounded-lg px-0 py-0 my-1">
         <div class="card-header px-1 py-1">Personal Details
 	  <div class="float-right"><a class="unlock personal" id="toggle_personal" onclick="toggle_lock_personal()">
 	      <svg aria-hidden="true" id="personal_lock" focusable="false" data-prefix="fas" data-icon="lock" class="svg-inline--fa fa-lock fa-w-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
@@ -23,7 +23,7 @@
       </div>
     </div>
     <div class="row justify-content-center">
-      <div class="card rounded-lg w-100 px-0 py-0">
+      <div class="card rounded-lg px-0 py-0">
         <div class="card-header px-1 py-1">
 	  Thresholds
 	  <div class = "float-right"><a class="unlock thresholds" id="toggle_thresholds" onclick="toggle_lock_thresholds()">
@@ -36,21 +36,21 @@
         <div class="card-body px-1 py-1">
           <span class="form-group"><label class="small" for="inputVar1">pressure_air_supply</label><input class="form-control py-0" id="pressure_air_supply" type="number" value=1 name="pressure_air_supply" readOnly /></span>
           <span class="form-group"><label class="small" for="inputVar2">pressure_air_regulated</label><input class="form-control py-0" id="pressure_air_regulated" type="number" value=1 name="variable2" readOnly /></span>
-          <br></br>
+          <br>
           <span class="form-group"><label class="small" for="inputVar3">pressure_o2_supply</label><input class="form-control py-0" id="pressure_o2_supply" type="number" value=1 name="variable3" readOnly /></span>
           <span class="form-group"><label class="small" for="inputVar4">pressure_o2_regulated</label><input class="form-control py-0" id="pressure_o2_regulated" type="number" value=1 name="variable4" readOnly /></span>
-          <br></br>
+          <br>
           <span class="form-group"><label class="small" for="inputVar5">pressure_buffer</label><input class="form-control py-0" id="pressure_buffer" type="number" value=1 name="variable4" readOnly /></span>
           <span class="form-group"><label class="small" for="inputVar6">pressure_inhale</label><input class="form-control py-0" id="pressure_inhale" type="number" value=1 name="variable4" readOnly /></span>
-          <br></br>
+          <br>
           <span class="form-group"><label class="small" for="inputVar7">pressure_patient</label><input class="form-control py-0" id="pressure_patient" type="number" value=1 name="variable4" readOnly /></span>
-          <br></br>
+          <br>
           <span class="form-group"><label class="small" for="inputVar8">readback_valve_air_in</label><input class="form-control py-0" id="readback_valve_air_in" type="number" value=1 name="variable4" readOnly /></span>
           <span class="form-group"><label class="small" for="inputVar9">readback_valve_02_in</label><input class="form-control py-0" id="readback_valve_02_in" type="number" value=1 name="variable4" readOnly /></span>
-          <br></br>
+          <br>
           <span class="form-group"><label class="small" for="inputVar10">readback_valve_out</label><input class="form-control py-0" id="readback_valve_out" type="number" value=1 name="variable5" readOnly /></span>
           <span class="form-group"><label class="small" for="inputVar11">readback_valve_scavenge</label><input class="form-control py-0" id="readback_valve_scavenge" type="number" value=1 name="variable6" readOnly /></span>
-          <br></br>
+          <br>
           <span class="form-group"><label class="small" for="inputVar12">readback_valve_purge</label><input class="form-control py-0" id="readback_valve_purge" type="number" value=1 name="variable6" readOnly /></span>
           <span class="form-group"><label class="small" for="inputVar13">readback_mode</label><input class="form-control py-0" id="readback_mode" type="number" value=1 name="variable6" readOnly /></span>
         </div>
