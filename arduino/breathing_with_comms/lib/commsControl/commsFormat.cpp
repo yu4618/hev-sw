@@ -27,8 +27,30 @@ void commsFormat::assignBytes(uint8_t* target, uint8_t* source, uint8_t size, bo
     }
 }
 
-void commsFormat::setCounter(uint8_t counter) {
-    *(getControl() + 2) |= (counter << 4);
+void commsFormat::setSequenceSend(uint8_t counter) {
+    // sequence send valid only for info frames (not supervisory ACK/NACK)
+    if ((*(getControl() + 1) & COMMS_CONTROL_SUPERVISORY) == 0) {
+        counter = (counter << 1) & 0xFE;
+        assignBytes(getControl() + 1, &counter, 1);
+    }
+}
+
+uint8_t commsFormat::getSequenceSend() {
+    // sequence send valid only for info frames (not supervisory ACK/NACK)
+    if ((*(getControl() + 1) & COMMS_CONTROL_SUPERVISORY) == 0) {
+        return (*(getControl() + 1) >> 1) & 0x7F;
+    } else {
+        return 0xFF;
+    }
+}
+
+void commsFormat::setSequenceReceive(uint8_t counter) {
+    counter = (counter << 1) & 0xFE;
+    assignBytes(getControl()    , &counter, 1);
+}
+
+uint8_t commsFormat::getSequenceReceive() {
+    return (*(getControl()) >> 1) & 0x7F;
 }
 
 // compare calculated and received CRC value
@@ -47,7 +69,7 @@ bool commsFormat::compareCrc() {
 // calculate CRC value
 void commsFormat::generateCrc(bool assign) {
     // calculate crc
-    crc_ = uCRC16Lib::calculate(reinterpret_cast<char*>(getAddress()), infoSize_ + 3);
+    crc_ = uCRC16Lib::calculate(reinterpret_cast<char*>(getAddress()), static_cast<uint16_t>(infoSize_ + 3));
 
     // assign crc to fcs
     if (assign) {
@@ -57,17 +79,34 @@ void commsFormat::generateCrc(bool assign) {
 }
 
 // assign received information to packet
-// TODO: set according to TBD dataFormat
-void commsFormat::setInformation(dataFormat* values) {
-    // assign values to
-    // memcpy(getInformation(), &values->count, 2);
-    memcpy(getInformation(), values, sizeof(struct dataFormat));
+void commsFormat::setInformation(payload *pl) {
+    assignBytes(getInformation(), reinterpret_cast<uint8_t*>(pl->getInformation()), getInfoSize());
 }
 
 void commsFormat::copyData(uint8_t* data, uint8_t dataSize) {
-    infoSize_ = dataSize - CONST_MIN_SIZE_PACKET;
     packetSize_ = dataSize;
-    memset(data_,    0, sizeof(data_));
+    infoSize_ = dataSize - CONST_MIN_SIZE_PACKET;
+    memset(getData(),    0, sizeof(data_));
 
     assignBytes(getData(), data, dataSize);
 }
+
+
+// STATIC METHODS
+// TODO rewrite in a slightly better way using the enum
+commsFormat* commsFormat::generateALARM(payload *pl) {
+    commsFormat *tmpComms = new commsFormat(pl->getInformationSize(), PACKET_ALARM);
+    tmpComms->setInformation(pl);
+    return tmpComms;
+}
+commsFormat* commsFormat::generateCMD  (payload *pl) {
+    commsFormat *tmpComms = new commsFormat(pl->getInformationSize(), PACKET_CMD  );
+    tmpComms->setInformation(pl);
+    return tmpComms;
+}
+commsFormat* commsFormat::generateDATA (payload *pl) {
+    commsFormat *tmpComms = new commsFormat(pl->getInformationSize(), PACKET_DATA );
+    tmpComms->setInformation(pl);
+    return tmpComms;
+}
+

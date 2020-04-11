@@ -1,11 +1,13 @@
 #ifndef COMMSFORMAT_H
 #define COMMSFORMAT_H
 
+// Communication protocol based on HDLC format
+// author Peter Svihra <peter.svihra@cern.ch>
+
 #include <Arduino.h>
 #include <uCRC16Lib.h>
 
 #include "commsConstants.h"
-
 
 ///////////////////////////////////////////////////////////////////////////
 // class to provide all needed control in data format
@@ -16,7 +18,9 @@ public:
     uint8_t* getData()    { return data_; }
     uint8_t  getSize()    { return packetSize_; }
 
-    void setInformation(dataFormat* values);
+    void setAddress(uint8_t* address) {assignBytes(getAddress(), address, 1); }
+    void setControl(uint8_t* control) {assignBytes(getControl(), control, 2); }
+    void setInformation(payload *pl);
 
     void assignBytes(uint8_t* target, uint8_t* source, uint8_t size, bool calcCrc = true);
 
@@ -31,8 +35,22 @@ public:
     uint8_t* getFcs()         {return data_ + 4 + infoSize_;}             // checksum
     uint8_t* getStop()        {return data_ + 4 + infoSize_ + 2;}         // ending flag of the chain
 
-    void setCounter(uint8_t counter);
-    void copyData(uint8_t* data, uint8_t dataSize);
+    uint8_t getInfoSize() { return infoSize_; }
+
+    void setSequenceSend   (uint8_t counter);
+    void setSequenceReceive(uint8_t counter);
+
+    uint8_t getSequenceSend   ();
+    uint8_t getSequenceReceive();
+
+    void copyData(uint8_t* payload, uint8_t dataSize);
+
+    static commsFormat* generateACK()   { return new commsFormat(0, 0, COMMS_CONTROL_ACK  << 8); }
+    static commsFormat* generateNACK()  { return new commsFormat(0, 0, COMMS_CONTROL_NACK << 8); }
+
+    static commsFormat* generateALARM(payload *pl);
+    static commsFormat* generateCMD  (payload *pl);
+    static commsFormat* generateDATA (payload *pl);
 
 private:
     uint8_t  data_[CONST_MAX_SIZE_PACKET];
@@ -41,39 +59,4 @@ private:
     uint16_t crc_;
 };
 
-
-///////////////////////////////////////////////////////////////////////////
-// ALARM specific class - contains X bytes of data and specific control flag
-class commsALARM: public commsFormat {
-public:
-    commsALARM() : commsFormat(4, PACKET_ALARM) {;} // contains 4 information bytes
-};
-
-///////////////////////////////////////////////////////////////////////////
-// CMD specific class - contains X bytes of data and specific control flag
-class commsCMD: public commsFormat {
-public:
-    commsCMD() : commsFormat(8, PACKET_CMD) {;} // contains 8 information bytes
-};
-
-///////////////////////////////////////////////////////////////////////////
-// DATA specific class - contains X bytes of data
-class commsDATA: public commsFormat {
-public:
-    commsDATA() : commsFormat(8, PACKET_DATA) {;} // contains 8 information bytes
-};
-
-///////////////////////////////////////////////////////////////////////////
-// ACK specific class - contains specific control flag
-class commsACK : public commsFormat {
-public:
-    commsACK(uint8_t address)  : commsFormat(0, address, COMMS_CONTROL_ACK << 8) {;} // contains 0 information bytes, has specific control type
-};
-
-///////////////////////////////////////////////////////////////////////////
-// NACK specific class - contains specific control flag
-class commsNACK: public commsFormat {
-public:
-  commsNACK(uint8_t address) : commsFormat(0, address, COMMS_CONTROL_NACK << 8) {;} // contains 0 information bytes, has specific control type
-};
 #endif // COMMSFORMAT_H
