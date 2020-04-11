@@ -1,5 +1,8 @@
 from struct import Struct 
 from enum import Enum, auto
+import logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 class payloadType(Enum):
     payloadAlarm = auto()
@@ -104,6 +107,8 @@ class dataFormat(BaseFormat):
     # for receiving dataFormat from microcontroller
     # fill the struct from a byteArray, 
     def fromByteArray(self, byteArray):
+        logging.debug(f"Byte array of size {len(byteArray)}")
+        logging.debug(f"Byte array of size {byteArray}")
         self._byteArray = byteArray
         (self._version,
         self._fsm_state,
@@ -184,8 +189,15 @@ class commandFormat(BaseFormat):
         self._type = payloadType.payloadCmd
 
         self._version = 0
-        self._cmdCode   = 0
+        self._cmdCode = 0
         self._param = 0
+
+    def __repr__(self):
+        return f"""{{
+    "version" : {self._version},
+    "cmdCode" : {self._cmdCode},
+    "param"   : {self._param}
+}}"""
         
     def fromByteArray(self, byteArray):
         self._byteArray = byteArray
@@ -200,6 +212,14 @@ class commandFormat(BaseFormat):
             self._cmdCode,
             self._param
         )
+
+    def getDict(self):
+        data = {
+            "version" : self._version,
+            "cmdCode" : self._cmdCode,
+            "param"   : self._param
+        }
+        return data
         
 class command_codes(Enum):
     CMD_START = 1
@@ -218,6 +238,13 @@ class alarmFormat(BaseFormat):
         self._version = 0
         self._alarmCode   = 0
         self._param = 0
+
+    def __repr__(self):
+        return f"""{{
+    "version"   : {self._version},
+    "alarmCode" : {self._alarmCode},
+    "param"     : {self._param}
+}}"""
         
     def fromByteArray(self, byteArray):
         self._byteArray = byteArray
@@ -231,6 +258,14 @@ class alarmFormat(BaseFormat):
             self._alarmCode,
             self._param
         ) 
+    
+    def getDict(self):
+        data = {
+            "version"   : self._version,
+            "alarmCode" : self._alarmCode,
+            "param"     : self._param
+        }
+        return data
 
 class alarm_codes(Enum):
     ALARM_START = 1

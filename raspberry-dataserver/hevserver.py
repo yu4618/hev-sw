@@ -10,6 +10,8 @@ import threading
 import argparse
 import svpi
 import commsControl
+from commsConstants import payloadType
+from collections import deque
 from serial.tools import list_ports
 from typing import List
 import logging
@@ -19,11 +21,9 @@ logging.basicConfig(level=logging.DEBUG,
 
 class HEVServer(object):
     def __init__(self, lli):
-        self._alarms = ''
+        self._alarms = []
         self._values = None
-        self._thresholds = []
         self._dblock = threading.Lock()  # make db threadsafe
-        self._generator = svpi.svpi()
         self._lli = lli
         self._lli.bind_to(self.polling)
 
@@ -37,19 +37,43 @@ class HEVServer(object):
 
     def __repr__(self):
         with self._dblock:
-            return f"Alarms: {self._alarms}.\nSensor values: {self._values}\nSettings: {self._thresholds}"
+            return f"Alarms: {self._alarms}.\nSensor values: {self._values}"
 
-    def set_input_file(self, input_file):
-        self._generator.addInputFile(input_file)
-        
     def polling(self, payload):
         # get values when we get a callback from commsControl (lli)
         logging.debug(f"Payload received: {payload!r}")
-        # TODO check what type of broadcast it is
-        with self._dblock:
-            self._values = payload.getDict()
+        # check if it is data or alarm
+        payload_type = payload.getType()
+        if payload_type == payloadType.payloadData:
+            # pass data to db
+            with self._dblock:
+                self._values = payload.getDict()
+        elif payload_type == payloadType.payloadAlarm:
+            alarm_map = {
+                0: "manual",
+                1: "gas supply",
+                2: "apnea",
+                3: "expired minute volume",
+                4: "upper pressure limit",
+                5: "power failure",
+            }
+            new_alarm = payload.getDict()
+            param = new_alarm["param"]
+            if new_alarm["alarmCode"] == 2:
+                # alarm stop, delete from list
+                with self._dblock:
+                    self._alarms.remove(alarm_map[param])
+
+            elif new_alarm["alarmCode"] == 1:
+                # alarm start, add to list
+                with self._dblock:
+                    self._alarms.append(alarm_map[param])
+
+        # let broadcast thread know there is data to send
         with self._dvlock:
             self._datavalid.set()
+
+        # pop from lli queue
         self._lli.pop_payloadrecv()
             
     async def handle_request(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
@@ -66,7 +90,7 @@ class HEVServer(object):
             logging.debug(f"{addr!r} requested to change to mode {mode!r}")
 
             # send via protocol and prepare reply
-            if self._generator.setMode(mode):
+            if self._lli.setMode(mode):
                 packet = f"""{{"type": "ackmode", "mode": \"{mode}\"}}""".encode()
             else:
                 packet = f"""{{"type": "nack"}}""".encode()
@@ -76,7 +100,7 @@ class HEVServer(object):
                 f"{addr!r} requested to set thresholds to {thresholds!r}")
 
             # send via protocol
-            payload = self._generator.setThresholds(thresholds)
+            payload = self._lli.setThresholds(thresholds)
             # prepare reply
             packet = f"""{{"type": "ackthresholds", "thresholds": \"{payload}\"}}""".encode()
         elif request["type"] == "setup":
@@ -87,8 +111,8 @@ class HEVServer(object):
                 f"{addr!r} requested to set thresholds to {thresholds!r}")
 
             # send via protocol and prepare reply
-            if self._generator.setMode(mode):
-                self._generator.setThresholds(thresholds)
+            if self._lli.setMode(mode):
+                self._lli.setThresholds(thresholds)
                 packet = f"""{{"type": "ack", "mode": \"{mode}\", "thresholds": \"{thresholds}\"}}""".encode()
             else:
                 packet = f"""{{"type": "nack"}}""".encode()
@@ -111,15 +135,17 @@ class HEVServer(object):
                 continue
             # take lock of db and prepare packet
             with self._dblock:
-                sensors: List[float] = self._values
-                alarms: str = self._alarms
-                thresholds: List[float] = self._thresholds
-            #broadcast_packet = f"""{{ "type": "broadcast", "sensors": {sensors}, "alarms": "{alarms}", "thresholds": {thresholds}}}"""
-            broadcast_packet = sensors
-            logging.info(f"Send: {broadcast_packet}")
+                values: List[float] = self._values
+                alarms = self._alarms if len(self._alarms) > 0 else None
+
+            broadcast_packet = {}
+            broadcast_packet["sensors"] = values
+            broadcast_packet["alarms"] = alarms # add alarms key/value pair
+
+            logging.info(f"Send: {json.dumps(broadcast_packet,indent=4)}")
 
             try:
-                writer.write(f"{broadcast_packet}".encode())
+                writer.write(json.dumps(broadcast_packet).encode())
                 await writer.drain()
             except (ConnectionResetError, BrokenPipeError):
                 # Connection lost, stop trying to broadcast and free up socket
@@ -173,7 +199,6 @@ if __name__ == "__main__":
     #parser to allow us to pass arguments to hevserver
     parser = argparse.ArgumentParser(description='Arguments to run hevserver')
     parser.add_argument('--inputFile', type=str, default = '', help='a test file to load data')
-    parser.add_argument('--randGen', action='store_true', help='use a front end emulator which generates random values')
     args = parser.parse_args()
     
     # get arduino serial port
@@ -181,18 +206,20 @@ if __name__ == "__main__":
         if "ARDUINO" in port.manufacturer.upper():
             port = port.device 
 
-    # initialise low level interface and dataserver
-    try:
-        lli = commsControl.commsControl(port=port)
-    except NameError:
-        print("Arduino not connected")
-        exit(1)
+    # check if input file was specified
+    if args.inputFile != '':
+        # initialise frond end generator from file
+        lli = svpi.svpi(args.inputFile)
+    else:
+        # initialise low level interface
+        try:
+            lli = commsControl.commsControl(port=port)
+        except NameError:
+            print("Arduino not connected")
+            exit(1)
 
     hevsrv = HEVServer(lli)
 
-    # check if input file was specified
-    if args.inputFile != '':
-        hevsrv.set_input_file(args.inputFile)
     # serve forever
     while True:
         pass

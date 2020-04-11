@@ -7,7 +7,7 @@ import asyncio
 import time
 import json
 import threading
-from typing import List
+from typing import List, Dict
 import logging
 logging.basicConfig(level=logging.INFO,
                     format='hevclient %(asctime)s - %(levelname)s - %(message)s')
@@ -38,12 +38,11 @@ class HEVClient(object):
         # grab data from the socket as soon as it is available and dump it in the db
         while self._polling:
             data = await reader.read(500)
-            data = data.decode("utf-8").replace("'",'"')
+            data = data.decode("utf-8")
             data = json.loads(data)
             with self._lock:
-                self._values = data
-                #self._alarms = data["alarms"]
-                #self._thresholds = data["thresholds"]
+                self._values = data["sensors"]
+                self._alarms = data["alarms"]
 
         # close connection
         writer.close()
@@ -98,7 +97,7 @@ class HEVClient(object):
         # set a mode and thresholds
         return asyncio.run(self.send_request("setup", mode=mode, thresholds=thresholds))
 
-    def get_values(self) -> List[float]:
+    def get_values(self) -> Dict:
         # get sensor values from db
         return self._values
 
@@ -114,15 +113,16 @@ if __name__ == "__main__":
 
     # Play with sensor values and alarms
     for i in range(30):
-        values = hevclient.get_values()
-        if values is None and i > 0:
-            i -= 1
-            time.sleep(1)
-            continue
-        print(f"{values!r}")
+        values = hevclient.get_values() # returns a dict or None
+        alarms = hevclient.get_alarms() # returns a list of alarms currently ongoing
+        if values is None:
+            i = i+1 if i > 0 else 0
+        else:
+            print(f"Values: {json.dumps(values, indent=4)}")
+            print(f"Alarms: {alarms}")
         time.sleep(1)
 
-    # set modes and thresholds
+    # set modes and thresholds (this will change)
     print(hevclient.set_mode("CPAP"))
     print(hevclient.set_thresholds([12.3, 45.6, 78.9]))
     print(hevclient.setup("CPAP", [12.3, 45.6, 78.9]))
@@ -131,6 +131,7 @@ if __name__ == "__main__":
 
     # print some more values
     for i in range(10):
-        print(f"Sensor values: {hevclient.get_values()}")
+        print(f"Alarms: {hevclient.get_alarms()}")
+        print(f"Values: {json.dumps(hevclient.get_values(), indent=4)}")
         print(f"Alarms: {hevclient.get_alarms()}")
         time.sleep(1)

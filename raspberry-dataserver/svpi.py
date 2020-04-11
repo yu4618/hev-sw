@@ -5,59 +5,77 @@
 
 import time
 import numpy as np
-from typing import List
+import argparse
+from collections import deque
+import commsFormat
+import threading
+import commsConstants
+from typing import List, Dict
 import logging
 logging.basicConfig(level=logging.INFO,
-                    format='svpi %(asctime)s - %(levelname)s - %(message)s')
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
-class svpi:
-    def __init__(self):
+class svpi():
+    def __init__(self, inputFile):
         # use input file for testing
-        self.input = None
-        # store current line in the file so we know when to stop
-        self.cur_line = None
-        # flag to check if we can continue to generate numbers
-        self.run   = True
+        self._input = open(inputFile, 'rb')
+        # dump file to variable
+        self._bytestore = bytearray(self._input.read())
+        self._pos = 0 # position inside bytestore
+        self._currentAlarm = None
+        # received queue and observers to be notified on update
+        self._payloadrecv = deque(maxlen = 16)
+        self._observers = []
+        sendingWorker = threading.Thread(target=self.generate, daemon=True)
+        sendingWorker.start()
         
-    def getValues(self) -> List[float]:
-        # check for file
-        if (self.input):
-            sensor_value: List[float] = [ float(v) for v in self.cur_line.replace('\n','').split(',') ]
-            # grab next line, if it's empty we stop the run
-            self.cur_line = self.input.readline()
-            if (self.cur_line == ''):
-                self.input.close()
-                self.run = False
-        else:
-            # All sensor readings 32 bit floats
-            sensor_value: List[float] = np.random.uniform(0.0, 1000.0, 6).tolist()
-        return sensor_value
+    def generate(self) -> None:
+        while True:
+            # check for an alarm
+            alarm = self.getAlarms()
+            if alarm is not None:
+                byteArray = alarm
+                payload = commsConstants.alarmFormat()
+            else:
+                # grab next array from filedump
+                fullArray = self._bytestore[0+self._pos*27:27+self._pos*27]
+                # current byte dump (20200411) has wrong format 27 bytes, new format expects 26. snip out second byte
+                byteArray = fullArray[:1] + fullArray[2:]
+                # go to next byte array. if at the end, loop
+                self._pos = self._pos + 1 if self._pos < 99 else 0
+                payload = commsConstants.dataFormat()
+            
+            payload.fromByteArray(byteArray)
+            self.payloadrecv = payload
+            time.sleep(1)
 
-    def addInputFile(self, fileName):
-        #open file and read first line
-        self.input = open(fileName, 'r')
-        self.cur_line = self.input.readline()
-    
     def getAlarms(self) -> List[str]:
-        # give a random alarm a twentieth of the time
-        alarms = {
-            0: "manual",
-            1: "gas supply",
-            2: "apnea",
-            3: "expired minute volume",
-            4: "upper pressure limit",
-            5: "power failure",
-        }
+        # give/cancel a random alarm a twentieth of the time
+        #alarms = {
+        #    0: "manual",
+        #    1: "gas supply",
+        #    2: "apnea",
+        #    3: "expired minute volume",
+        #    4: "upper pressure limit",
+        #    5: "power failure",
+        #}
         if np.random.randint(0, 20) == 0:
-            return [alarms[np.random.randint(0, 6)]]
-        return ["none"]
-
+            if self._currentAlarm is None:
+                # send alarm
+                alarm = np.random.randint(0, 6)
+                self._currentAlarm = alarm
+                return bytearray((0xA0,0x01,0x00,0x00,0x00,alarm))
+            else:
+                # stop previous alarm
+                alarm = self._currentAlarm
+                self._currentAlarm = None
+                return bytearray((0xA0,0x02,0x00,0x00,0x00,alarm))
+        return None
 
     def getThresholds(self) -> List[float]:
         # All thresholds 32 bit floats
         thresholds: List[float] = np.random.uniform(0.0, 1000.0, 3).tolist()
         return thresholds
-
 
     def setMode(self, mode: str) -> bool:
         # setting a mode - just print it
@@ -68,15 +86,43 @@ class svpi:
             logging.error(f"Requested mode {mode} does not exist")
             return False
 
-
     def setThresholds(self, thresholds: List[float]) -> str:
         # setting thresholds - just print them
         logging.info(f"Setting thresholds {thresholds}")
         return thresholds
 
+    # callback to dependants to read the received payload
+    @property
+    def payloadrecv(self):
+        return self._payloadrecv
+
+    @payloadrecv.setter
+    def payloadrecv(self, payload):
+        self._payloadrecv.append(payload)
+        logging.debug(f"Pushed {payload} to FIFO")
+        for callback in self._observers:
+            # peek at the leftmost item, don't pop until receipt confirmed
+            callback(self._payloadrecv[0])
+
+    def bind_to(self, callback):
+        self._observers.append(callback)
+
+    def pop_payloadrecv(self):
+        # from callback. confirmed receipt, pop value
+        poppedval = self._payloadrecv.popleft()
+        logging.debug(f"Popped {poppedval} from FIFO")
+        if len(self._payloadrecv) > 0:
+            # purge full queue if Dependant goes down when it comes back up
+            for callback in self._observers:
+                callback(self._payloadrecv[0])
+
 
 if __name__ == "__main__":
-    generator = svpi()
-    while generator.run:
-        print(generator.getValues())
-        time.sleep(0.5)
+    #parser to allow us to pass arguments to hevserver
+    parser = argparse.ArgumentParser(description='Arguments to run hevserver')
+    parser.add_argument('--inputFile', type=str, default = '', help='a test file to load data')
+    args = parser.parse_args()
+
+    generator = svpi(args.inputFile)
+    while True:
+        pass
