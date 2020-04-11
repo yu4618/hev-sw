@@ -14,6 +14,20 @@
 class commsFormat {
 public:
     commsFormat(uint8_t infoSize = 0, uint8_t address = 0x00, uint16_t control = 0x0000);
+    commsFormat(const commsFormat& other) {
+        crc_        = other.crc_;
+        packetSize_ = other.packetSize_;
+        infoSize_   = other.infoSize_;
+        memcpy(data_, other.data_, CONST_MAX_SIZE_PACKET);
+    }
+    commsFormat& operator=(const commsFormat& other) {
+        crc_        = other.crc_;
+        packetSize_ = other.packetSize_;
+        infoSize_   = other.infoSize_;
+        memcpy(data_, other.data_, CONST_MAX_SIZE_PACKET);
+
+        return *this;
+    }
 
     uint8_t* getData()    { return data_; }
     uint8_t  getSize()    { return packetSize_; }

@@ -11,6 +11,22 @@ def commsFromBytes(byteArray):
     
     return comms
 
+def generateAlarm(payload):
+    comms = commsFormat(infoSize = payload.getSize(), address = 0xC0)
+    comms.setInformation(payload)
+    return comms
+
+def generateCmd(payload):
+    comms = commsFormat(infoSize = payload.getSize(), address = 0x80)
+    comms.setInformation(payload)
+    return comms
+
+def generateData(payload):
+    comms = commsFormat(infoSize = payload.getSize(), address = 0x40)
+    comms.setInformation(payload)
+    return comms
+
+
 # basic format based on HDLC
 class commsFormat:
     def __init__(self, infoSize = 0, address = 0x00, control = [0x00, 0x00]):
@@ -44,9 +60,9 @@ class commsFormat:
     def setControl(self, control):
         self.assignBytes(self.getControl(), bytes(control), 2)
     
-    def setInformation(self, value, size = 2):
+    def setInformation(self, payload):
         # convert provided value
-        self.assignBytes(self.getInformation(), value.to_bytes(size, byteorder='little'))
+        self.assignBytes(self.getInformation(), payload.byteArray)
         
     def setSequenceSend(self, value):
         # sequence sent valid only for info frames (not supervisory ACK/NACK)
@@ -95,21 +111,6 @@ class commsFormat:
     def copyBytes(self, bytesArray):
         self.infoSize_ = len(bytesArray) - 7
         self.data_     = bytesArray
-        
-# DATA specific formating
-class commsDATA(commsFormat):
-    def __init__(self):
-        super().__init__(infoSize = 8, address = 0x40)
-
-# CMD specific formating
-class commsCMD(commsFormat):
-    def __init__(self):
-        super().__init__(infoSize = 8, address = 0x80)
-
-# ALARM specific formating
-class commsALARM(commsFormat):
-    def __init__(self):
-        super().__init__(infoSize = 4, address = 0xC0)
 
 # ACK specific formating
 class commsACK(commsFormat):

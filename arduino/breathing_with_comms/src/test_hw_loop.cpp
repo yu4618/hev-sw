@@ -4,7 +4,7 @@
 The Idea of this code is to unfold the FSM in two: one to assign the transitions and the second one to program the states.
 */
 uint64_t FSM_time = millis();
-int timeout;
+int timeout = 1000;
 byte lab_cycle_mode = 0;
 byte bs_state = BS_IDLE;
 bool running = false;
