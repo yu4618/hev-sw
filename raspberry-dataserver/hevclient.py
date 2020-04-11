@@ -22,8 +22,8 @@ setflag = False
 class HEVClient(object):
     def __init__(self):
         self._alarms = []  # db for alarms
-        self._values = []  # db for sensor values
-        self._thresholds = []  # db for threshold settings - not implemented
+        self._values = None  # db for sensor values
+        self._thresholds = []  # db for threshold settings
         self._polling = True  # keep reading data into db
         self._lock = threading.Lock()  # lock for the database
 
@@ -33,15 +33,17 @@ class HEVClient(object):
 
     async def polling(self) -> None:
         # open persistent connection with server
-        reader, writer = await asyncio.open_connection("127.0.0.1", 54322)
+        reader, writer = await asyncio.open_connection("127.0.0.1", 54320)
 
         # grab data from the socket as soon as it is available and dump it in the db
         while self._polling:
-            data = await reader.read(300)
-            data = json.loads(data.decode("utf-8"))
+            data = await reader.read(500)
+            data = data.decode("utf-8").replace("'",'"')
+            data = json.loads(data)
             with self._lock:
-                self._values = data["sensors"]
-                self._alarms = data["alarms"]
+                self._values = data
+                #self._alarms = data["alarms"]
+                #self._thresholds = data["thresholds"]
 
         # close connection
         writer.close()
@@ -111,10 +113,13 @@ if __name__ == "__main__":
     hevclient = HEVClient()
 
     # Play with sensor values and alarms
-    print("It takes a little while to set up the broadcast connection so the first readings will be empty")
-    for i in range(10):
-        print(f"Sensor values: {hevclient.get_values()}")
-        print(f"Alarms: {hevclient.get_alarms()}")
+    for i in range(30):
+        values = hevclient.get_values()
+        if values is None and i > 0:
+            i -= 1
+            time.sleep(1)
+            continue
+        print(f"{values!r}")
         time.sleep(1)
 
     # set modes and thresholds

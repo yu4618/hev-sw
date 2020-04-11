@@ -19,7 +19,7 @@ class Dependant(object):
         logging.info(f"payload received: {payload}")
         self._llipacket = payload.getDict() # returns a dict
         # pop from queue - protects against Dependant going down and not receiving packets
-        self._lli.poppayloadrecv_()
+        self._lli.pop_payloadrecv()
 
 dep = Dependant(comms)
 start = 0x1

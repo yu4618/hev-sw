@@ -15,7 +15,7 @@ from collections import deque
 
 import binascii
 import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 # communication class that governs talking between devices
@@ -155,7 +155,7 @@ class commsControl():
                             sequenceReceive = ((control >> 1) & 0x7F) + 1
                             address = tmpComms.getData()[tmpComms.getAddress():tmpComms.getControl()]
 
-                            payload = tmpComms.getData()[tmpComms.getInformation() : tmpComms.getFcs()]
+                            #payload = tmpComms.getData()[tmpComms.getInformation() : tmpComms.getFcs()]
                             
                             if self.receivePacket(payloadType, tmpComms):
                                 logging.debug("Preparing ACK")
@@ -209,7 +209,7 @@ class commsControl():
         if   payloadType == commsConstants.payloadType.payloadAlarm:
             payload = commsConstants.alarmFormat()
         elif payloadType == commsConstants.payloadType.payloadCmd:
-            payload = commsConstants.cmdFormat()
+            payload = commsConstants.commandFormat()
         elif payloadType == commsConstants.payloadType.payloadData:
             payload = commsConstants.dataFormat()
         else:
@@ -265,7 +265,7 @@ class commsControl():
     def bind_to(self, callback):
         self.observers_.append(callback)
 
-    def poppayloadrecv_(self):
+    def pop_payloadrecv(self):
         # from callback. confirmed receipt, pop value
         poppedval = self.payloadrecv_.popleft()
         logging.debug(f"Popped {poppedval} from FIFO")
@@ -286,7 +286,7 @@ if __name__ == "__main__" :
 #             logging.debug(f"payload received: {payload!r}")
             self._llipacket = payload
             # pop from queue - protects against Dependant going down and not receiving packets
-            self._lli.poppayloadrecv_()
+            self._lli.pop_payloadrecv()
 
     # get port number for arduino, mostly for debugging
     for port in list_ports.comports():
@@ -304,7 +304,7 @@ if __name__ == "__main__" :
     payloadSend.toByteArray()
     
     def burst(payload):
-        for i in range(16):
+        for _ in range(16):
             commsCtrl.writePayload(payload)
     
 #     commsCtrl.writePayload(payloadSend)
