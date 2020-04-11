@@ -73,7 +73,6 @@ void commsFormat::generateCrc(bool assign) {
 
     // assign crc to fcs
     if (assign) {
-        ;
         assignBytes(getFcs(), reinterpret_cast<uint8_t*>(&crc_), 2, false);
     }
 }

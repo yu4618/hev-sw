@@ -19,7 +19,7 @@ commsControl::commsControl(uint32_t baudrate) {
     queueData_  = new RingBuf<commsFormat *, CONST_MAX_SIZE_RB_SENDING>();
     queueCmd_   = new RingBuf<commsFormat *, CONST_MAX_SIZE_RB_SENDING>();
 
-    queueReceived_ = new RingBuf<payload *, CONST_MAX_SIZE_RB_RECEIVING>();
+    queueReceived_ = new RingBuf<payload, CONST_MAX_SIZE_RB_RECEIVING>();
 
     commsTmp_   = commsFormat(CONST_MAX_SIZE_PACKET - CONST_MIN_SIZE_PACKET );
 
@@ -135,45 +135,44 @@ void commsControl::receiver() {
     }
 }
 
-bool commsControl::writePayload(payload *pl) {
+bool commsControl::writePayload(payload &pl) {
     commsFormat* tmpComms;
+    payloadType type = pl.getType();
 
     // switch on different received payload types
     // TODO simplify the static functions
-    switch(pl->getType()) {
+    switch(type) {
         case payloadAlarm:
-            tmpComms = commsFormat::generateALARM(pl);
+            tmpComms = commsFormat::generateALARM(&pl);
             break;
         case payloadData:
-            tmpComms = commsFormat::generateDATA(pl);
+            tmpComms = commsFormat::generateDATA(&pl);
             break;
         case payloadCmd:
-            tmpComms = commsFormat::generateCMD(pl);
+            tmpComms = commsFormat::generateCMD(&pl);
             break;
         default:
             return false;
     }
 
+    RingBuf<commsFormat *, CONST_MAX_SIZE_RB_SENDING> *tmpQueue = getQueue(&type);
     // add new entry to the queue
-    if (queueData_->isFull()) {
+    if (tmpQueue->isFull()) {
         commsFormat *tmpCommsRm;
-        if (queueData_->pop(tmpCommsRm)) {
+        if (tmpQueue->pop(tmpCommsRm)) {
             delete tmpCommsRm;
         }
     }
 
-    if (queueData_->push(tmpComms) ) {
+    if (tmpQueue->push(tmpComms) ) {
         return true;
     }
     return false;
 }
 
-bool commsControl::readPayload( payload* pl) {
+bool commsControl::readPayload( payload &pl) {
     if ( !queueReceived_->isEmpty()) {
-        payload *tmpPl;
-        if (queueReceived_->pop(tmpPl)) {
-            memcpy(pl, tmpPl, sizeof(payload));
-            delete tmpPl;
+        if (queueReceived_->pop(pl)) {
             return true;
         }
     }
@@ -259,9 +258,8 @@ void commsControl::resendPacket(RingBuf<commsFormat *, CONST_MAX_SIZE_RB_SENDING
 
 
 // receiving anything of commsFormat
-// TODO remove address and use commsTmp only
 bool commsControl::receivePacket(payloadType *type) {
-    payload *tmpPl = new payload(*type);
+    payload tmpPl = payload(*type);
 
     void *tmpInformation = nullptr;
     switch (*type) {
@@ -282,13 +280,12 @@ bool commsControl::receivePacket(payloadType *type) {
         return false;
     }
     memcpy(tmpInformation, commsTmp_.getInformation(), commsTmp_.getInfoSize());
-    tmpPl->setPayload(*type, tmpInformation);
+    tmpPl.setPayload(*type, tmpInformation);
 
     // remove first entry if RB is full
     if (queueReceived_->isFull()) {
-        payload *tmpDataRm = nullptr;
-        if (queueReceived_->pop(tmpDataRm)) {
-            delete tmpDataRm;
+        payload tmpPlRm;
+        if (queueReceived_->pop(tmpPlRm)) {
         }
     }
 

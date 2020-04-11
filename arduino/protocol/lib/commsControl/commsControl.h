@@ -19,8 +19,8 @@ public:
 
     void beginSerial();
 
-    bool writePayload(payload *pl);
-    bool readPayload (payload *pl);
+    bool writePayload(payload &pl);
+    bool readPayload (payload &pl);
 
     void sender();
     void receiver();
@@ -50,7 +50,7 @@ private:
     RingBuf<commsFormat *, CONST_MAX_SIZE_RB_SENDING> *queueData_;
     RingBuf<commsFormat *, CONST_MAX_SIZE_RB_SENDING> *queueCmd_;
 
-    RingBuf<payload *, CONST_MAX_SIZE_RB_RECEIVING> *queueReceived_;
+    RingBuf<payload, CONST_MAX_SIZE_RB_RECEIVING> *queueReceived_;
 
     commsFormat commsTmp_;
 
