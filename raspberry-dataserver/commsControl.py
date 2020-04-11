@@ -6,31 +6,33 @@
 import serial
 from serial.tools import list_ports
 
+import threading
 import time
 
 import commsFormat
-from commsConstants import dataFormat
+import commsConstants
 from collections import deque
-import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-import threading
+import binascii
+import logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 # communication class that governs talking between devices
 class commsControl():
-    def __init__(self, port, baudrate = 115200, queueSize = 16):
+    def __init__(self, port, baudrate = 115200, queueSizeReceive = 16, queueSizeSend = 16):
         
         self.serial_ = None
         self.openSerial(port, baudrate)
 
         # send queues are FIFO ring-buffers of the defined size
-        self.alarms_   = deque(maxlen = queueSize)
-        self.commands_ = deque(maxlen = queueSize)
-        self.data_     = deque(maxlen = queueSize)
+        self.alarms_   = deque(maxlen = queueSizeSend)
+        self.commands_ = deque(maxlen = queueSizeSend)
+        self.data_     = deque(maxlen = queueSizeSend)
         
         # received queue and observers to be notified on update
-        self._payloadrecv = deque(maxlen = queueSize)
-        self._observers = []
+        self.payloadrecv_ = deque(maxlen = queueSizeReceive)
+        self.observers_ = []
         
         # needed to find packet frames
         self.received_ = []
@@ -61,13 +63,13 @@ class commsControl():
             try:
                 self.serial_.close()
             except:
-                logging.warning("warning: device not open")
+                logging.warning("Serial device not open")
             self.serial_ = None
         
     def sender(self):
         while self.sending_:
             self._datavalid.wait()
-            if not self.serial_ is None:
+            if self.serial_ is not None:
                 if not self.serial_.in_waiting > 0:
                     self.sendQueue(self.alarms_  ,  10)
                     self.sendQueue(self.commands_,  50)
@@ -77,56 +79,71 @@ class commsControl():
 
     def receiver(self):
         while self.receiving_:
-            if not self.serial_ is None:
+            if self.serial_ is not None:
                 if self.serial_.in_waiting > 0:
                     with self.lock_:
                         logging.debug("Receiving data...")
                         data = self.serial_.read(self.serial_.in_waiting)
-                        self.packetReceived(data)
+                        self.processPacket(data)
 
     def sendQueue(self, queue, timeout):
         if len(queue) > 0:
+            logging.debug(f'Queue length: {len(queue)}')
             currentTime = int(round(time.time() * 1000))
             if currentTime > (self.timeLastTransmission_ + timeout):
                 with self.lock_:
                     self.timeLastTransmission_ = currentTime
                     queue[0].setSequenceSend(self.sequenceSend_)
-                    packet = queue.popleft()
-                    self.sendPacket(packet)
-                    logging.debug(f"Sent packet: {packet}")
+                    self.sendPacket(queue[0])
                     
-    def getQueue(self, packetFlag):
-        if   packetFlag == 0xC0:
+    def getQueue(self, payloadType):
+        if   payloadType == commsConstants.payloadType.payloadAlarm:
             return self.alarms_
-        elif packetFlag == 0x80:
+        elif payloadType == commsConstants.payloadType.payloadCmd:
             return self.commands_
-        elif packetFlag == 0x40:
+        elif payloadType == commsConstants.payloadType.payloadData:
             return self.data_
         else:
             return None
+    
+    def getInfoType(self, address):
+        address &= 0xC0
+        if address == 0xC0:
+            return commsConstants.payloadType.payloadAlarm
+        elif address == 0x80:
+            return commsConstants.payloadType.payloadCmd
+        elif address == 0x40:
+            return commsConstants.payloadType.payloadData
+        else:
+            return commsConstants.payloadType.payloadUnset
 
-    def packetReceived(self, data):
+    def processPacket(self, data):
         for byte in data:
             byte = bytes([byte])
             # TODO: this could be written in more pythonic way
             # force read byte by byte
             self.received_.append(byte)
-            logging.debug(byte)
+#             logging.debug(byte)
+            # find starting flag of the packet
             if not self.foundStart_ and byte == bytes([0x7E]):
                 self.foundStart_    = True
                 self.receivedStart_ = len(self.received_)
+            # find ending flag of the packet
             elif byte == bytes([0x7E]) :
                 decoded = self.decoder(self.received_, self.receivedStart_)
                 if decoded is not None:
-                    logging.debug(decoded)
+                    logging.debug(binascii.hexlify(decoded))
                     tmpComms = commsFormat.commsFromBytes(decoded)
                     if tmpComms.compareCrc():
-                        ctrlFlag   = decoded[3] & 0x0F
-                        packetFlag = decoded[1] & 0xC0
+                        control     = tmpComms.getData()[tmpComms.getControl()+1]
+                        self.sequenceReceive_ = (tmpComms.getData()[tmpComms.getControl()] >> 1) & 0x7F
                         
-                        self.sequenceReceive_ = (decoded[2] >> 1) & 0x7F
-                        
-                        tmpQueue   = self.getQueue(packetFlag)
+                        # get type of payload and corresponding queue
+                        payloadType = self.getInfoType(tmpComms.getData()[tmpComms.getAddress()])
+                        tmpQueue   = self.getQueue(payloadType)
+
+                        # get type of packet
+                        ctrlFlag    = control & 0x0F
                         if ctrlFlag == 0x05:
                             logging.debug("Received NACK")
                             # received NACK
@@ -135,16 +152,18 @@ class commsControl():
                             # received ACK
                             self.finishPacket(tmpQueue)
                         else:
-                            # decode data
+                            sequenceReceive = ((control >> 1) & 0x7F) + 1
+                            address = tmpComms.getData()[tmpComms.getAddress():tmpComms.getControl()]
+
                             payload = tmpComms.getData()[tmpComms.getInformation() : tmpComms.getFcs()]
-                            # append to array
-                            df = dataFormat()
-                            df.fromByteArray(payload)
-                            self.payloadrecv = df
-                            # send ack
-                            logging.debug("Preparing ACK")
-                            commsResponse = commsFormat.commsACK(address = decoded[1])
-                            commsResponse.setSequenceReceive((decoded[3] >> 1) + 1)
+                            
+                            if self.receivePacket(payloadType, tmpComms):
+                                logging.debug("Preparing ACK")
+                                commsResponse = commsFormat.commsACK(address = address[0])
+                            else:
+                                logging.debug("Preparing NACK")
+                                commsResponse = commsFormat.commsNACK(address = address)
+                            commsResponse.setSequenceReceive(sequenceReceive)
                             self.sendPacket(commsResponse)
                     
                 self.received_.clear()
@@ -152,16 +171,28 @@ class commsControl():
                 self.foundStart_    = False
                 self.receivedStart_ = -1        
         
-    def registerData(self, value):
-        tmpData = commsFormat.commsDATA()
-        tmpData.setInformation(value)
-        self.data_.append(tmpData)
+    def writePayload(self, payload):
+        payloadType = payload.getType()
+        if   payloadType == commsConstants.payloadType.payloadAlarm:
+            tmpComms = commsFormat.generateAlarm(payload)
+        elif payloadType == commsConstants.payloadType.payloadCmd:
+            tmpComms = commsFormat.generateCmd(payload)
+        elif payloadType == commsConstants.payloadType.payloadData:
+            tmpComms = commsFormat.generateData(payload)
+        else:
+            return False        
+        tmpComms.setInformation(payload)
+        
+        tmpQueue = self.getQueue(payloadType)
+        tmpQueue.append(tmpComms)
         with self._dvlock:
             self._datavalid.set()
+            
+        return True
         
     def sendPacket(self, comms):
         logging.debug("Sending data...")
-        logging.debug(self.encoder(comms.getData()))
+        logging.debug(binascii.hexlify(self.encoder(comms.getData())))
         self.serial_.write(self.encoder(comms.getData()))
     
     def finishPacket(self, queue):
@@ -173,6 +204,20 @@ class commsControl():
                     queue.popleft()
         except:
             logging.debug("Queue is probably empty")
+            
+    def receivePacket(self, payloadType, commsPacket):
+        if   payloadType == commsConstants.payloadType.payloadAlarm:
+            payload = commsConstants.alarmFormat()
+        elif payloadType == commsConstants.payloadType.payloadCmd:
+            payload = commsConstants.cmdFormat()
+        elif payloadType == commsConstants.payloadType.payloadData:
+            payload = commsConstants.dataFormat()
+        else:
+            return False
+        
+        payload.fromByteArray(commsPacket.getData()[commsPacket.getInformation():commsPacket.getFcs()])
+        self.payloadrecv = payload
+        return True
 
     # escape any 0x7D or 0x7E with 0x7D and swap bit 5
     def escapeByte(self, byte):
@@ -203,31 +248,31 @@ class commsControl():
             return result
         except:
             return None
-
+        
     # callback to dependants to read the received payload
     @property
     def payloadrecv(self):
-        return self._payloadrecv
+        return self.payloadrecv_
 
     @payloadrecv.setter
     def payloadrecv(self, payload):
-        self._payloadrecv.append(payload)
+        self.payloadrecv_.append(payload)
         logging.debug(f"Pushed {payload} to FIFO")
-        for callback in self._observers:
+        for callback in self.observers_:
             # peek at the leftmost item, don't pop until receipt confirmed
-            callback(self._payloadrecv[0])
+            callback(self.payloadrecv_[0])
 
     def bind_to(self, callback):
-        self._observers.append(callback)
+        self.observers_.append(callback)
 
-    def pop_payloadrecv(self):
+    def poppayloadrecv_(self):
         # from callback. confirmed receipt, pop value
-        poppedval = self._payloadrecv.popleft()
+        poppedval = self.payloadrecv_.popleft()
         logging.debug(f"Popped {poppedval} from FIFO")
-        if len(self._payloadrecv) > 0:
+        if len(self.payloadrecv_) > 0:
             # purge full queue if Dependant goes down when it comes back up
-            for callback in self._observers:
-                callback(self._payloadrecv[0])
+            for callback in self.observers_:
+                callback(self.payloadrecv_[0])
         
 if __name__ == "__main__" :
     # example dependant
@@ -238,10 +283,10 @@ if __name__ == "__main__" :
             self._lli.bind_to(self.update_llipacket)
 
         def update_llipacket(self, payload):
-            logging.debug(f"payload received: {payload!r}")
+#             logging.debug(f"payload received: {payload!r}")
             self._llipacket = payload
             # pop from queue - protects against Dependant going down and not receiving packets
-            self._lli.pop_payloadrecv()
+            self._lli.poppayloadrecv_()
 
     # get port number for arduino, mostly for debugging
     for port in list_ports.comports():
@@ -253,15 +298,25 @@ if __name__ == "__main__" :
 
     commsCtrl = commsControl(port = port)
     example = Dependant(commsCtrl)
+    
+    payloadSend = commsConstants.commandFormat()
+    payloadSend.cmdCode = 3
+    payloadSend.toByteArray()
+    
+    def burst(payload):
+        for i in range(16):
+            commsCtrl.writePayload(payload)
+    
+#     commsCtrl.writePayload(payloadSend)
 
-    commsCtrl.payloadrecv = "testpacket1"
-    commsCtrl.payloadrecv = "testpacket2"
+#     commsCtrl.payloadrecv = "testpacket1"
+#     commsCtrl.payloadrecv = "testpacket2"
 
-    LEDs = [3,5,7]
-    for _ in range(30):
-        for led in LEDs:
-            commsCtrl.registerData(led)
-        time.sleep(5)
+#     LEDs = [3,5,7]
+#     for _ in range(30):
+#         for led in LEDs:
+#             commsCtrl.registerData(led)
+#         time.sleep(5)
 
-    while True:
-        pass
+#     while True:
+#         pass
