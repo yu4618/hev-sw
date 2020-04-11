@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from commsControl import commsControl
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

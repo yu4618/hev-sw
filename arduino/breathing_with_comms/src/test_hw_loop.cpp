@@ -104,18 +104,18 @@ void FSM_breath_cycle()
             } else {
                 timeout = 1000; 
             }
-            setValves(V_CLOSED, V_CLOSED, V_OPEN, V_OPEN, V_CLOSED);
+            setValves(V_CLOSED, V_CLOSED, V_OPEN, V_OPEN, V_CLOSED, V_CLOSED);
             break;
         case BS_BUFF_PREFILL:
-            setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED);
+            setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED, V_CLOSED);
             timeout = 100;
             break;
         case BS_BUFF_FILL:
-            setValves(V_OPEN, V_OPEN, V_CLOSED, V_OPEN, V_CLOSED);
+            setValves(V_OPEN, V_OPEN, V_CLOSED, V_OPEN, V_CLOSED, V_CLOSED);
             timeout = 1200;
             break;
         case BS_BUFF_LOADED:
-            setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED);
+            setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED, V_CLOSED);
             switch (lab_cycle_mode)
             {
                 case LAB_MODE_FLUSH:
@@ -131,40 +131,38 @@ void FSM_breath_cycle()
             }
             break;
         case BS_BUFF_PRE_INHALE:
-            setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED);
+            setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED);
             timeout = 100;
         
             break;
         case BS_INHALE:
-            setValves(V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED, V_CLOSED);
+            setValves(V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED, V_CLOSED, V_CLOSED);
             timeout =1600;
             
             break;
         case BS_PAUSE:
-            setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED);
+            setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED, V_CLOSED);
             timeout = 200;
             
             break;
         case BS_EXHALE_FILL:
-            setValves(V_OPEN, V_OPEN, V_CLOSED, V_OPEN, V_CLOSED);
+            setValves(V_OPEN, V_OPEN, V_CLOSED, V_OPEN, V_CLOSED, V_CLOSED);
             timeout =1200;
         
             break;
         case BS_EXHALE:
-            setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED);
+            setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_OPEN, V_CLOSED, V_CLOSED);
             timeout = 400;
             
             break;
         case BS_BUFF_PURGE:
-            setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_OPEN, V_OPEN);
+            setValves(V_CLOSED, V_CLOSED, V_CLOSED, V_OPEN, V_OPEN, V_CLOSED);
             timeout =1000;
             break;
         case BS_BUFF_FLUSH:
-            setValves(V_CLOSED, V_CLOSED, V_OPEN, V_OPEN, V_CLOSED);
+            setValves(V_CLOSED, V_CLOSED, V_OPEN, V_OPEN, V_CLOSED, V_CLOSED);
             timeout =1000;
             break;
-        
-
     }
 
 //  Serial.println("state FSM_breath_cycle: " + String(bs_state));

@@ -99,13 +99,15 @@ void loop()
     data.pressure_buffer = analogRead(pin_p_buffer);
     data.pressure_inhale = analogRead(pin_p_inhale);
 
-    bool vin_air, vin_o2, vinhale, vexhale, vpurge;
-    getValves(vin_air, vin_o2, vinhale, vexhale, vpurge);
+    bool vin_air, vin_o2, vinhale, vexhale, vpurge, vatmos;
+    getValves(vin_air, vin_o2, vinhale, vexhale, vpurge, vatmos);
     data.readback_valve_air_in = vin_air;
     data.readback_valve_o2_in = vin_o2;
     data.readback_valve_inhale = vinhale;
     data.readback_valve_exhale = vexhale;
     data.readback_valve_purge = vpurge;
+    // TODO ; add to dataFormat
+    // data.readback_valve_atmosphere = vpurge;
 
     //breath_cycle();
     FSM_assignment();

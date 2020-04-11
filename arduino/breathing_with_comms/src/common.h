@@ -33,10 +33,14 @@ enum hev_modes : byte
 
 enum valve_states : bool
 {
-    V_OPEN = LOW,
-    V_CLOSED = HIGH
+    V_OPEN = HIGH,
+    V_CLOSED = LOW
 };
 
-void setValves(bool vin_air, bool vin_o2, bool vinhale, bool vexhale, bool vpurge);
-void getValves(bool &vin_air, bool &vin_o2, bool &vinhale, bool &vexhale, bool &vpurge);
+static uint32_t valve_port_states = 0x0; 
+
+void setValves(bool vin_air, bool vin_o2, bool vinhale, 
+               bool vexhale, bool vpurge, bool vatmos);
+void getValves(bool &vin_air, bool &vin_o2, bool &vinhale,  
+               bool &vexhale, bool &vpurge, bool &vatmos);
 
