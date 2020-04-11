@@ -5,7 +5,7 @@
 
 #define CONST_TIMEOUT_ALARM 5
 #define CONST_TIMEOUT_DATA  10
-#define CONST_TIMEOUT_CMD   5
+#define CONST_TIMEOUT_CMD   50
 
 
 #define CONST_MAX_SIZE_RB_RECEIVING 10
@@ -107,9 +107,9 @@ public:
     payloadType getType() {return type_; }
 
     // requires argument as new struct
-    void setData (dataFormat   *data) { /*unsetAll(); type_ = payloadType::payloadData;   data_ = new  dataFormat(  *data); }*/ memcpy(& data_,  data, sizeof( dataFormat)); }
-    void setCmd  (cmdFormat     *cmd) { /*unsetAll(); type_ = payloadType::payloadCmd;     cmd_ = new   cmdFormat(   *cmd); }*/ memcpy(&  cmd_,   cmd, sizeof(  cmdFormat)); }
-    void setAlarm(alarmFormat *alarm) { /*unsetAll(); type_ = payloadType::payloadAlarm; alarm_ = new alarmFormat( *alarm); }*/ memcpy(&alarm_, alarm, sizeof(alarmFormat)); }
+    void setData (dataFormat   *data) { /*unsetAll(); */ type_ = payloadType::payloadData; /*  data_ = new  dataFormat(  *data); }*/ memcpy(& data_,  data, sizeof( dataFormat)); }
+    void setCmd  (cmdFormat     *cmd) { /*unsetAll(); */ type_ = payloadType::payloadCmd;  /*   cmd_ = new   cmdFormat(   *cmd); }*/ memcpy(&  cmd_,   cmd, sizeof(  cmdFormat)); }
+    void setAlarm(alarmFormat *alarm) { /*unsetAll(); */ type_ = payloadType::payloadAlarm;/* alarm_ = new alarmFormat( *alarm); }*/ memcpy(&alarm_, alarm, sizeof(alarmFormat)); }
 
     dataFormat  *getData () {return  &data_; }
     cmdFormat   *getCmd  () {return   &cmd_; }
