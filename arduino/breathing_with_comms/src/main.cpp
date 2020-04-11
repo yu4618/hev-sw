@@ -1,9 +1,16 @@
 #include <Arduino.h>
+#include <MemoryFree.h>
 #include "commsControl.h"
 #include "test_hw_loop.h"
 #include "common.h"
 
 int ventilation_mode = HEV_MODE_PS;
+
+const uint16_t report_freq = 1 ; // in Hz
+const uint16_t update_freq = 100 ; // in Hz
+
+uint16_t report_cnt = 0;
+
 float working_pressure = 1;             //?
 float inspiratory_minute_volume = 6000; // ml/min
 float respiratory_rate = 15;            //  10-40 +-1 ;aka breaths_per_min
@@ -106,23 +113,28 @@ void loop()
     data.readback_valve_inhale = vinhale;
     data.readback_valve_exhale = vexhale;
     data.readback_valve_purge = vpurge;
+    data.pressure_o2_supply = freeMemory() & 0xFFFF;
+    data.pressure_o2_regulated = freeMemory() >> 16;
     // TODO ; add to dataFormat
     // data.readback_valve_atmosphere = vpurge;
 
-    //breath_cycle();
     FSM_assignment();
     FSM_breath_cycle();
 
-    plSend.setType(payloadType::payloadData);
-    plSend.setData(&data);
-    comms.writePayload(&plSend);
+    report_cnt++;
+    if(report_cnt % (update_freq/report_freq) == 0)
+    {
+        plSend.setType(payloadType::payloadData);
+        plSend.setData(&data);
+        comms.writePayload(plSend);
+    }
     // per cycle sender
     comms.sender();
     // per cycle receiver
     comms.receiver();
 
     uint8_t cmdCode = 0;
-    if(comms.readPayload(&plReceive)){
+    if(comms.readPayload(plReceive)){
       if (plReceive.getType() == payloadType::payloadCmd) {
           cmdCode = (plReceive.getCmd()->cmdCode);
           plReceive.setType(payloadType::payloadUnset);
@@ -138,5 +150,5 @@ void loop()
         default:
         break;
     }
-    delay(10);
+    delay(1000/update_freq);
 }
