@@ -1,6 +1,8 @@
 var chart;
-var chart2;
-var chart_new;
+var refreshIntervalId;
+
+
+
 /**
  * Request data from the server, add it to the graph and set a timeout
  * to request again
@@ -30,7 +32,7 @@ function requestDataVar1(var1, var2) {
         cache: false
     });
     // call it again after one second
-    setTimeout(requestDataVar1, 1000, var1, var2);
+    refreshIntervalId = setTimeout(requestDataVar1, 1000, var1, var2);
 }
 
 
@@ -59,54 +61,8 @@ function requestDataVar(var1, var2) {
         cache: false
     });
     // call it again after one second
-    setTimeout(requestDataVar, 1000, var1, var2);
+    //setTimeout(requestDataVar, 1000, var1, var2);
 }
-
-
-
-function requestDataVar2() {
-    $.ajax({
-        url: '/live-data',
-        success: function(point) {
-            if(chart2.data.datasets[0].data.length > 20){
-                chart2.data.labels.shift();
-                chart2.data.datasets[0].data.shift();
-            }
-
-            // add the point
-            chart2.data.labels.push(point.created_at);
-            chart2.data.datasets[0].data.push(point.pressure);
-            
-            chart2.update();
-        },
-        cache: false
-    });
-    // call it again after one second
-    setTimeout(requestDataVar2, 1000);
-}
-
-/*
-function requestDataVar3() {
-    $.ajax({
-        url: '/live-data',
-        success: function(point) {
-            if(chart3.data.datasets[0].data.length > 20){
-                chart3.data.labels.shift();
-                chart3.data.datasets[0].data.shift();
-            }
-
-            // add the point
-            chart3.data.labels.push(point.created_at);
-            chart3.data.datasets[0].data.push(point.pressure);
-            
-            chart3.update();
-        },
-        cache: false
-    });
-    // call it again after one second
-    setTimeout(requestDataVar3, 1000);
-}
-*/
 
 
 
@@ -114,7 +70,7 @@ function requestDataVar3() {
 
 $(document).ready(function() {
     var ctx = document.getElementById('pressure_air_supply');
-    chart = new Chart(ctx, {
+  chart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: [],
@@ -122,15 +78,15 @@ $(document).ready(function() {
       label: 'A',
       yAxisID: 'A',
                 data: [],
-                label: "pressure_air_supply",
-                borderColor: "#3e95cd",
+                label: "temperature",
+                borderColor: "#0000FF",
                 fill: false,
               },{ 
       label: 'B',
       yAxisID: 'B',
                 data: [],
-                label: "B",
-                borderColor: "#FFF000",
+                label: "pressure",
+                borderColor: "#000000",
                 fill: false,
               } 
             ]
@@ -163,117 +119,11 @@ $(document).ready(function() {
                 }]
 	        },
 		legend : {
-		    display: false}
+		    display: true}
           }
     });
     requestDataVar1("temperature", "pressure");
 });
-
-
-
-
-$(document).ready(function() {
-    var ctx2 = document.getElementById('variable2');
-    chart2 = new Chart(ctx2, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{ 
-                data: [],
-                label: "Var2",
-                borderColor: "#3e95cd",
-                fill: false,
-              } 
-            ]
-          },
-          options: {
-            title: {
-              display: false,
-              text: 'Variable 2'
-            },
-            scales: {
-            xAxes: [{
-                type: 'time',
-                time: {
-                    unit: 'second',
-                    displayFormat: 'second'
-                },
-		ticks: {
-		    maxTicksLimit: 5,
-		    maxRotation: 0
-		}
-            }]
-            },
-	legend : {
-	    display: false
-	},
-	      layout : {
-		  padding : {
-		      left: 0,
-		      right: 0,
-		      top: 0,
-		      bottom: 0
-
-		  }
-	      }
-	  }
-    });
-    requestDataVar2();
-});
-
-/*
-
-$(document).ready(function() {
-    var ctx3 = document.getElementById('chart_variable3');
-    chart3 = new Chart(ctx3, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{ 
-                data: [],
-                label: "Var3",
-                borderColor: "#3e95cd",
-                fill: false,
-              } 
-            ]
-          },
-          options: {
-            title: {
-              display: false,
-              text: 'Variable 3'
-            },
-            scales: {
-            xAxes: [{
-                type: 'time',
-                time: {
-                    unit: 'second',
-                    displayFormat: 'second'
-                },
-		ticks: {
-		    maxTicksLimit: 5,
-		    maxRotation: 0
-		}
-            }]
-            },
-	legend : {
-	    display: false
-	},
-	      layout : {
-		  padding : {
-		      left: 0,
-		      right: 0,
-		      top: 0,
-		      bottom: 0
-
-		  }
-	      }
-	  }
-    });
-    requestDataVar3();
-});
-
-*/
-
 
 
 
@@ -299,21 +149,18 @@ function getSelectValues(select) {
 
 // Function runs on chart type select update
 function updateChartType() {
-    // here we destroy/delete the old or previous chart and redraw it again
-    chart.destroy();
-/*
-    chart = new Chart(ctx, {
-       type: document.getElementById("chart_dataset").value,
-       data: myData,
-    });
-*/
+
+    
     var selection = document.multiselect('#chart_variables')._item
     var selection_results = getSelectValues(selection)
-    console.log(selection_results[0]);
+    console.log("selected variables: ", selection_results);
 
-$(document).ready(function() {
-    var ctx_new = document.getElementById('pressure_air_supply');
-    chart_new = new Chart(ctx_new, {
+    //here we destroy/delete the old or previous chart and redraw it again
+    clearInterval(refreshIntervalId);
+    chart.destroy();
+    var ctx = document.getElementById('pressure_air_supply');
+
+  chart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: [],
@@ -321,15 +168,15 @@ $(document).ready(function() {
       label: 'A',
       yAxisID: 'A',
                 data: [],
-                label: "pressure_air_supply",
-                borderColor: "#3e95cd",
+                label: selection_results[0],
+                borderColor: "#0000FF",
                 fill: false,
               },{ 
       label: 'B',
       yAxisID: 'B',
                 data: [],
-                label: "B",
-                borderColor: "#FFF000",
+                label: selection_results[1],
+                borderColor: "#000000",
                 fill: false,
               } 
             ]
@@ -362,13 +209,13 @@ $(document).ready(function() {
                 }]
 	        },
 		legend : {
-		    display: false}
+		    display: true}
           }
-    });
-    requestDataVar(selection_results[0], selection_results[1]);
-});
 
 
+
+   });
+    requestDataVar1(selection_results[0], selection_results[1]);
 }; // ends update button
 
     document.multiselect('#chart_variables')        

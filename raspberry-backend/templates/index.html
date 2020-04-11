@@ -16,14 +16,14 @@
         <option value='variable3' selected>variable3</option>
         <option value='variable4' selected>variable4</option>
         <option value='variable5' selected>variable5</option>
-        <input type="button" value="Submit" onclick="updateChartType()">
+        <input class="form-control py-0" type="button" value="Submit" onclick="updateChartType()" style="background-color: #1f4793 ; color: white">
 	</select>
 
 	<div class="row">
           <div class="col-md-12">
             <div class="card mb-6">
               <div class="card-chart-header small ">Variable number 1</div>
-              <div class="card-body px-0 py-0"><canvas id="pressure_air_supply" width="100%" height="80"></canvas></div>
+              <div class="card-body px-0 py-0"><canvas id="pressure_air_supply" width="100%" height="65px"></canvas></div>
             </div>
           </div>
 	</div>
@@ -91,7 +91,7 @@
 	    <form action="{{ url_for('data_handler') }}" method="post" class="w-95">
 	      <div class="card rounded-lg small px-0">
 		<div class="card-header align-items-center justify-content-between px-1 py-1">
-		  Inputs
+		  INPUTS
 		  <div class = "float-right"><a class="unlock thresholds" id="toggle_thresholds" onclick="toggle_lock_settings()">
 		      <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="lock" class="svg-inline--fa fa-lock fa-w-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
 			<path class="path-icon" id = "path-locked" d="M400 224h-24v-72C376 68.2 307.8 0 224 0S72 68.2 72 152v72H48c-26.5 0-48 21.5-48 48v192c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V272c0-26.5-21.5-48-48-48zm-104 0H152v-72c0-39.7 32.3-72 72-72s72 32.3 72 72v72z"></path>
@@ -107,17 +107,17 @@
 		      <td><span class="form-group"><label class="small" for="inputVar1">Fill Time (ms):</label><input class="form-control px-0 py-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max = 100 /></span></td>
 		      <td><span class="form-group"><label class="small" for="inputVar1">Pause (ms):</label><input class="form-control px-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max=100 /></span></td>
 		      <td></td>
-		    </tr>
+		    </tr> 
 		    <tr>
-		      <td><span class=""><label class="small" for="inputThres1">Exhale/Inhale: </label><input class="form-control px-0 lh-1" id="inputThres1" type="number" value=1 max=100 min=0 name="" readOnly /></span></td>
-		      <td><span class="form-group"><label class="small" for="inputVar1">PEEP (cmH2O):</label><input class="form-control px-0 py-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max = 100 /></span></td>
-		      <td><span class="form-group"><label class="small" for="inputVar1">Exhale Time (ms):</label><input class="form-control px-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max=100 /></span></td>
-		      <td><span class="form-group"><label class="small" for="inputVar1">RPM:</label><input class="form-control px-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max=100 /></span></td>
+		      <td><span class=""> <br>  <label class="small" for="inputThres1">Exhale/Inhale: </label><input class="form-control px-0 lh-1" id="inputThres1" type="number" value=1 max=100 min=0 name="" readOnly /></span></td>
+		      <td><span class="form-group"> <br> <label class="small" for="inputVar1">PEEP (cmH2O):</label><input class="form-control px-0 py-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max = 100 /></span></td>
+		      <td><span class="form-group"> <br> <label class="small" for="inputVar1">Exhale Time (ms):</label><input class="form-control px-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max=100 /></span></td>
+		      <td><span class="form-group"> <br> <label class="small" for="inputVar1">RPM:</label><input class="form-control px-0" id="inputThres1" type="number" value=1 name="variable1" readOnly min=0 max=100 /></span></td>
 		    </tr>
 		  </table>
 		</div>
 		<div class="card-footer px-0 py-0 align-items-center">
-		  <span class="form-group ml-auto mr-auto"><input class="form-control py-0" id="inputPassword" type="submit" value="Submit Changes" /></span>
+		  <span class="form-group ml-auto mr-auto"><input class="form-control py-0" id="inputPassword" type="submit" value="Submit Changes" style="background-color: #1f4793 ; color: white" /></span>
 		</div>
 	      </div>
 	    </form>
