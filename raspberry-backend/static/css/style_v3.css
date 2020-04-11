@@ -7543,6 +7543,10 @@ button.bg-cern:focus {
 .my-1 {
   margin-top: 0.25rem !important;
 }
+.mt-0b,
+.my-0b {
+  margin-top: 0.1rem !important;
+}
 
 .mr-1,
 .mx-1 {
@@ -7553,7 +7557,10 @@ button.bg-cern:focus {
 .my-1 {
   margin-bottom: 0.25rem !important;
 }
-
+.mb-0b,
+.my-0b {
+  margin-bottom: 0.1rem !important;
+}
 .ml-1,
 .mx-1 {
   margin-left: 0.25rem !important;
@@ -7896,12 +7903,12 @@ button.bg-cern:focus {
 }
 
 .m-n5 {
-  margin: -3rem !important;
+a  margin: -3rem !important;
 }
 
 .mt-n5,
 .my-n5 {
-  margin-top: -3rem !important;
+l  margin-top: -3rem !important;
 }
 
 .mr-n5,
@@ -10264,17 +10271,28 @@ body {
 #chart-area{ fill:white; }
 .fa-w-16{ width:95px;height:95px;}
 .path-icon{ fill:rgb(31,71,147); }
+.path-icon-alarm{ fill:red; }
+.transparent{ fill:none;fill-opacity:1.0; }
 .w-100{width:100%;}
+.w-95{width:95%;}
+.w-99{width:99%;}
+
 .alarm-ok{border: 1px solid var(--cern); width:20rem;}
 .alarm-red{border-color:#ff0000;color:#ff0000}
-#alarms{color:red;}
+.text-align-right{text-align:right;}
+#alarms{color:red;vertical-align:middle;text-align:center;line-height:calc(var(--top-height) - 0.5rem);}
+.border-invisible{
+    border: 1px solid rgb(255,255,255);
+}
 div.active{
-    background-color: rgb(211,211,211);
+    background-color: rgb(240,240,240);
+    border: 1px solid var(--cern);
     border-radius: 0.25rem;
 }
 .patient{ min-width:12rem;}
 .sb-control-button{
-    width:250px;
+    border: 1px solid var(--cern);
+    width:200px;
     height:100px;
 }
 
@@ -10306,3 +10324,6 @@ div.active{
     //box-shadow: 0 -1px 2px 0 rgba(0,0,0,.15);
 }
 .controls { position: absolute;bottom:0;}
+
+.col-center{ margin: 0 auto; }
+.lh-1{line-height:1;}

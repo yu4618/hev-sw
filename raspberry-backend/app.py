@@ -32,6 +32,10 @@ def hello_worlds():
 def settings():
     return render_template('settings.html', result=live_data())
 
+@WEBAPP.route('/charts')
+def charts():
+    return render_template('charts.html', result=live_data())
+
 @WEBAPP.route('/fan')
 def fan():
     return render_template('fan.html', result=live_data())
