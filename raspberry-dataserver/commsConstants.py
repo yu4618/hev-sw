@@ -14,20 +14,28 @@ class payloadType(Enum):
 
 class BaseFormat():
     def __init__(self):
-        self.RPI_VERSION = 0xA0
-        self.version = 0
-        self.byteArray = None
+        self._RPI_VERSION = 0xA0
+        self._byteArray = None
         self._type = payloadType.payloadUnset
+        self._version = 0
+
+    @property
+    def byteArray(self):
+        return self._byteArray
+    
+    @byteArray.setter
+    def byteArray(self):
+        print("Use fromByteArray to change this")
 
     # check for mismatch between pi and microcontroller version
     def checkVersion(self):
-        if self.RPI_VERSION == self.version :
-            self.version_error = True
+        if self._RPI_VERSION == self._version :
+            self._version_error = True
         else : 
-            self.version_error = False
+            self._version_error = False
 
     def getSize(self):
-        return len(self.byteArray)
+        return len(self._byteArray)
             
     def getType(self):
         return self._type
@@ -48,72 +56,72 @@ class dataFormat(BaseFormat):
         # < = little endian
         # > = big endian
         # ! = network format (big endian)
-        self.dataStruct = Struct("!BBHHHHHHHHHBBBBBB")
-        self.byteArray = None
+        self._dataStruct = Struct("!BBHHHHHHHHHBBBBBB")
+        self._byteArray = None
         self._type = payloadType.payloadData
 
 
         # make all zero to start with
-        self.version = 0
-        self.fsm_state = 0
-        self.pressure_air_supply = 0
-        self.pressure_air_regulated = 0
-        self.pressure_o2_supply = 0
-        self.pressure_o2_regulated = 0
-        self.pressure_buffer = 0
-        self.pressure_inhale = 0
-        self.pressure_patient = 0
-        self.temperature_buffer = 0
-        self.pressure_diff_patient = 0
-        self.readback_valve_air_in = 0
-        self.readback_valve_o2_in = 0
-        self.readback_valve_inhale = 0
-        self.readback_valve_exhale = 0
-        self.readback_valve_purge = 0
-        self.readback_mode = 0
+        self._version = 0
+        self._fsm_state = 0
+        self._pressure_air_supply = 0
+        self._pressure_air_regulated = 0
+        self._pressure_o2_supply = 0
+        self._pressure_o2_regulated = 0
+        self._pressure_buffer = 0
+        self._pressure_inhale = 0
+        self._pressure_patient = 0
+        self._temperature_buffer = 0
+        self._pressure_diff_patient = 0
+        self._readback_valve_air_in = 0
+        self._readback_valve_o2_in = 0
+        self._readback_valve_inhale = 0
+        self._readback_valve_exhale = 0
+        self._readback_valve_purge = 0
+        self._readback_mode = 0
 
     def __repr__(self):
         return f"""{{
-    "version"                : {self.version},
-    "fsm_state"              : {self.fsm_state},
-    "pressure_air_supply"    : {self.pressure_air_supply},
-    "pressure_air_regulated" : {self.pressure_air_regulated},
-    "pressure_o2_supply"     : {self.pressure_o2_supply},
-    "pressure_o2_regulated"  : {self.pressure_o2_regulated},
-    "pressure_buffer"        : {self.pressure_buffer},
-    "pressure_inhale"        : {self.pressure_inhale},
-    "pressure_patient"       : {self.pressure_patient},
-    "temperature_buffer"     : {self.temperature_buffer},
-    "pressure_diff_patient"  : {self.pressure_diff_patient},
-    "readback_valve_air_in"  : {self.readback_valve_air_in},
-    "readback_valve_o2_in"   : {self.readback_valve_o2_in},
-    "readback_valve_inhale"  : {self.readback_valve_inhale},
-    "readback_valve_exhale"  : {self.readback_valve_exhale},
-    "readback_valve_purge"   : {self.readback_valve_purge},
-    "readback_mode"          : {self.readback_mode}
+    "version"                : {self._version},
+    "fsm_state"              : {self._fsm_state},
+    "pressure_air_supply"    : {self._pressure_air_supply},
+    "pressure_air_regulated" : {self._pressure_air_regulated},
+    "pressure_o2_supply"     : {self._pressure_o2_supply},
+    "pressure_o2_regulated"  : {self._pressure_o2_regulated},
+    "pressure_buffer"        : {self._pressure_buffer},
+    "pressure_inhale"        : {self._pressure_inhale},
+    "pressure_patient"       : {self._pressure_patient},
+    "temperature_buffer"     : {self._temperature_buffer},
+    "pressure_diff_patient"  : {self._pressure_diff_patient},
+    "readback_valve_air_in"  : {self._readback_valve_air_in},
+    "readback_valve_o2_in"   : {self._readback_valve_o2_in},
+    "readback_valve_inhale"  : {self._readback_valve_inhale},
+    "readback_valve_exhale"  : {self._readback_valve_exhale},
+    "readback_valve_purge"   : {self._readback_valve_purge},
+    "readback_mode"          : {self._readback_mode}
 }}"""
         
     # for receiving dataFormat from microcontroller
     # fill the struct from a byteArray, 
     def fromByteArray(self, byteArray):
-        self.byteArray = byteArray
-        (self.version,
-        self.fsm_state,
-        self.pressure_air_supply,
-        self.pressure_air_regulated,
-        self.pressure_o2_supply,
-        self.pressure_o2_regulated,
-        self.pressure_buffer,
-        self.pressure_inhale,
-        self.pressure_patient,
-        self.temperature_buffer,
-        self.pressure_diff_patient,
-        self.readback_valve_air_in,
-        self.readback_valve_o2_in,
-        self.readback_valve_inhale,
-        self.readback_valve_exhale,
-        self.readback_valve_purge,
-        self.readback_mode) = self.dataStruct.unpack(self.byteArray) 
+        self._byteArray = byteArray
+        (self._version,
+        self._fsm_state,
+        self._pressure_air_supply,
+        self._pressure_air_regulated,
+        self._pressure_o2_supply,
+        self._pressure_o2_regulated,
+        self._pressure_buffer,
+        self._pressure_inhale,
+        self._pressure_patient,
+        self._temperature_buffer,
+        self._pressure_diff_patient,
+        self._readback_valve_air_in,
+        self._readback_valve_o2_in,
+        self._readback_valve_inhale,
+        self._readback_valve_exhale,
+        self._readback_valve_purge,
+        self._readback_mode) = self._dataStruct.unpack(self._byteArray) 
 
 
     # for sending dataFormat to microcontroller
@@ -121,47 +129,47 @@ class dataFormat(BaseFormat):
     # to the microcontroller
     def toByteArray(self):
         # since pi is sender
-        self.version = self.RPI_VERSION
+        self._version = self._RPI_VERSION
 
-        self.byteArray = self.dataStruct.pack(
-            self.RPI_VERSION,
-            self.fsm_state,
-            self.pressure_air_supply,
-            self.pressure_air_regulated,
-            self.pressure_o2_supply,
-            self.pressure_o2_regulated,
-            self.pressure_buffer,
-            self.pressure_inhale,
-            self.pressure_patient,
-            self.temperature_buffer,
-            self.pressure_diff_patient,
-            self.readback_valve_air_in,
-            self.readback_valve_o2_in,
-            self.readback_valve_inhale,
-            self.readback_valve_exhale,
-            self.readback_valve_purge,
-            self.readback_mode
+        self._byteArray = self._dataStruct.pack(
+            self._RPI_VERSION,
+            self._fsm_state,
+            self._pressure_air_supply,
+            self._pressure_air_regulated,
+            self._pressure_o2_supply,
+            self._pressure_o2_regulated,
+            self._pressure_buffer,
+            self._pressure_inhale,
+            self._pressure_patient,
+            self._temperature_buffer,
+            self._pressure_diff_patient,
+            self._readback_valve_air_in,
+            self._readback_valve_o2_in,
+            self._readback_valve_inhale,
+            self._readback_valve_exhale,
+            self._readback_valve_purge,
+            self._readback_mode
         ) 
 
     def getDict(self):
         data = {
-            "version"                : self.version,
-            "fsm_state"              : self.fsm_state,
-            "pressure_air_supply"    : self.pressure_air_supply,
-            "pressure_air_regulated" : self.pressure_air_regulated,
-            "pressure_o2_supply"     : self.pressure_o2_supply,
-            "pressure_o2_regulated"  : self.pressure_o2_regulated,
-            "pressure_buffer"        : self.pressure_buffer,
-            "pressure_inhale"        : self.pressure_inhale,
-            "pressure_patient"       : self.pressure_patient,
-            "temperature_buffer"     : self.temperature_buffer,
-            "pressure_diff_patient"  : self.pressure_diff_patient,
-            "readback_valve_air_in"  : self.readback_valve_air_in,
-            "readback_valve_o2_in"   : self.readback_valve_o2_in,
-            "readback_valve_inhale"  : self.readback_valve_inhale,
-            "readback_valve_exhale"  : self.readback_valve_exhale,
-            "readback_valve_purge"   : self.readback_valve_purge,
-            "readback_mode"          : self.readback_mode
+            "version"                : self._version,
+            "fsm_state"              : self._fsm_state,
+            "pressure_air_supply"    : self._pressure_air_supply,
+            "pressure_air_regulated" : self._pressure_air_regulated,
+            "pressure_o2_supply"     : self._pressure_o2_supply,
+            "pressure_o2_regulated"  : self._pressure_o2_regulated,
+            "pressure_buffer"        : self._pressure_buffer,
+            "pressure_inhale"        : self._pressure_inhale,
+            "pressure_patient"       : self._pressure_patient,
+            "temperature_buffer"     : self._temperature_buffer,
+            "pressure_diff_patient"  : self._pressure_diff_patient,
+            "readback_valve_air_in"  : self._readback_valve_air_in,
+            "readback_valve_o2_in"   : self._readback_valve_o2_in,
+            "readback_valve_inhale"  : self._readback_valve_inhale,
+            "readback_valve_exhale"  : self._readback_valve_exhale,
+            "readback_valve_purge"   : self._readback_valve_purge,
+            "readback_mode"          : self._readback_mode
         }
         return data
 
@@ -171,26 +179,26 @@ class dataFormat(BaseFormat):
 class commandFormat(BaseFormat):
     def __init__(self):
         super().__init__()
-        self.dataStruct = Struct("!BBI")
-        self.byteArray = None
+        self._dataStruct = Struct("!BBI")
+        self._byteArray = None
         self._type = payloadType.payloadCmd
 
-        self.version = 0
-        self.cmdCode   = 0
-        self.param = 0
+        self._version = 0
+        self._cmdCode   = 0
+        self._param = 0
         
     def fromByteArray(self, byteArray):
-        self.byteArray = byteArray
-        (self.version,
-        self.cmdCode,
-        self.param) = self.dataStruct.unpack(self.byteArray) 
+        self._byteArray = byteArray
+        (self._version,
+        self._cmdCode,
+        self._param) = self._dataStruct.unpack(self._byteArray) 
 
     def toByteArray(self):
         # since pi is sender
-        self.byteArray = self.dataStruct.pack(
-            self.RPI_VERSION,
-            self.cmdCode,
-            self.param
+        self._byteArray = self._dataStruct.pack(
+            self._RPI_VERSION,
+            self._cmdCode,
+            self._param
         )
         
 class command_codes(Enum):
@@ -203,25 +211,25 @@ class command_codes(Enum):
 class alarmFormat(BaseFormat):
     def __init__(self):
         super().__init__()
-        self.dataStruct = Struct("!BBI")
-        self.byteArray = None
+        self._dataStruct = Struct("!BBI")
+        self._byteArray = None
         self._type = payloadType.payloadAlarm
 
-        self.version = 0
-        self.alarmCode   = 0
-        self.param = 0
+        self._version = 0
+        self._alarmCode   = 0
+        self._param = 0
         
     def fromByteArray(self, byteArray):
-        self.byteArray = byteArray
-        (self.version,
-        self.alarmCode,
-        self.param) = self.dataStruct.unpack(self.byteArray) 
+        self._byteArray = byteArray
+        (self._version,
+        self._alarmCode,
+        self._param) = self._dataStruct.unpack(self._byteArray)
 
     def toByteArray(self):
-        self.byteArray = self.dataStruct.pack(
-            self.RPI_VERSION,
-            self.alarmCode,
-            self.param
+        self._byteArray = self._dataStruct.pack(
+            self._RPI_VERSION,
+            self._alarmCode,
+            self._param
         ) 
 
 class alarm_codes(Enum):
